@@ -4,13 +4,13 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 // Docker Desktop may not read macOS protected Documents folders. Stage only trusted
-// public local configuration/templates at a stable path so restarted containers keep
+// public local configuration at a stable path so restarted containers keep
 // valid bind mounts. Persistent data stays in named Docker volumes.
 const stage = join(tmpdir(), "scout-supabase-local");
 
 await mkdir(join(stage, "supabase"), { recursive: true });
 
-for (const entry of ["config.toml", "seed.sql", "migrations", "templates"]) {
+for (const entry of ["config.toml", "seed.sql", "migrations"]) {
   await cp(resolve("supabase", entry), join(stage, "supabase", entry), {
     recursive: true,
   });
