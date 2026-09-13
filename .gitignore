@@ -42,13 +42,7 @@ coverage/
 *.lcov
 *.profraw
 *.profdata
-/docs/screenshots/
-/docs/evidence/*
-# Curated, documented public integration evidence
-!/docs/evidence/v4-liquidity.json
-!/docs/evidence/uniswap-integration.json
-!/docs/evidence/correctness-2026-09-13.json
-!/docs/evidence/live-watch-2026-09-11.json
+/docs/
 
 # Local logs, scratch files, and crash output
 logs/
@@ -84,9 +78,5 @@ Desktop.ini
 /apps/web/AGENTS.md
 /apps/web/CLAUDE.md
 
-# Obsolete generated development reports; do not ignore maintained Markdown
+# Obsolete generated development reports
 /design-qa.md
-/docs/*AUDIT*.md
-/docs/*MILESTONE*.md
-/docs/MONITORING-ARCHITECTURE.md
-/docs/HALLUCINATION-SAFETY.md
