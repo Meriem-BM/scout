@@ -14,6 +14,7 @@ const config = [
       "packages/database/src/database.types.ts",
       "playwright-report/**",
       "test-results/**",
+      "artifacts/**",
     ],
   },
   {
