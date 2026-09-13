@@ -1,0 +1,17 @@
+syntax = "proto3";
+package scout.v1;
+message Swaps { repeated Swap swaps = 1; }
+message Swap {
+  string pool = 1;
+  string transaction_hash = 2;
+  uint32 log_index = 3;
+  string initiator = 4;
+  string transaction_to = 5;
+  string pool_caller = 6;
+  string recipient = 7;
+  string amount0 = 8;
+  string amount1 = 9;
+  string sqrt_price_x96 = 10;
+  string liquidity = 11;
+  string tick = 12;
+}

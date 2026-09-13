@@ -1,0 +1,28 @@
+[package]
+name = "scout-streams"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+substreams = "=0.7.6"
+substreams-ethereum = "=0.11.1"
+prost = "=0.13.5"
+ethabi = "=17.2.0"
+
+[dev-dependencies]
+hex = "=0.4.3"
+
+[build-dependencies]
+substreams-ethereum = "=0.11.1"
+prost-build = "=0.13.5"
+protoc-bin-vendored = "=3.2.0"
+
+[profile.release]
+lto = true
+opt-level = "s"
+strip = "debuginfo"
+panic = "abort"

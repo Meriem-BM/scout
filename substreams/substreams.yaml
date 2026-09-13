@@ -1,0 +1,37 @@
+specVersion: v0.1.0
+package:
+  name: scout_weth_usdc
+  version: v0.1.0
+  description: Scout Ethereum v3 pool swap decoding and explicit sell-direction selection
+network: mainnet
+imports:
+  eth_common: https://spkg.io/v1/packages/ethereum-common/v0.3.3
+protobuf:
+  files: [scout.proto]
+  importPaths: [./proto]
+  excludePaths: [sf/substreams, google]
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: ./target/wasm32-unknown-unknown/release/scout_streams.wasm
+modules:
+  - name: map_swaps
+    kind: map
+    initialBlock: 23000000
+    blockFilter:
+      module: eth_common:index_events
+      query:
+        string: (evt_addr:0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640 || evt_addr:0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8) && evt_sig:0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:scout.v1.Swaps
+  - name: map_watch
+    kind: map
+    inputs:
+      - params: string
+      - map: map_swaps
+    output:
+      type: proto:scout.v1.Swaps
+params:
+  map_watch: 0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640;0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2
