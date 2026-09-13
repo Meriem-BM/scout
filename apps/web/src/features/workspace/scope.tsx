@@ -141,10 +141,10 @@ export function ScopeNote() {
           <Activity width={19} height={19} />
         </span>
         <div>
-          <h3>Autonomous onchain monitoring</h3>
+          <h3>Supported monitoring setups</h3>
           <p>
-            Describe the activity. Scout resolves the protocol, chain, data,
-            pipeline, and verification plan.
+            Start with an available setup. Each Watch must pass source and
+            execution checks before monitoring begins.
           </p>
         </div>
       </div>
@@ -152,8 +152,8 @@ export function ScopeNote() {
         <div className="scope-note-row">
           <TokenPair />
           <div>
-            <h3>Uniswap · first-class</h3>
-            <p>Deepest planning, verification, Graph context, and live path.</p>
+            <h3>Uniswap V3 · Ethereum</h3>
+            <p>ETH/USDC swaps and volume rules in the 0.05% and 0.30% pools.</p>
           </div>
         </div>
         <div className="scope-note-row">
@@ -161,10 +161,36 @@ export function ScopeNote() {
             <Database width={16} height={16} />
           </span>
           <div>
-            <h3>Other onchain intents</h3>
+            <h3>USDC transfers · Base</h3>
             <p>
-              Planned through the same compiler and activated only after a real
-              executor passes verification.
+              Native USDC transfer thresholds using nominal dollar value, across
+              all wallets.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="scope-note-list">
+        <div className="scope-note-row">
+          <span className="scope-note-secondary-icon">
+            <Activity width={16} height={16} />
+          </span>
+          <div>
+            <h3>Uniswap V4 · Ethereum</h3>
+            <p>
+              Liquidity increases or removals, across all pools or a specified
+              pool ID. Dollar-value thresholds are not supported.
+            </p>
+          </div>
+        </div>
+        <div className="scope-note-row">
+          <span className="scope-note-secondary-icon">
+            <ShieldCheck width={16} height={16} />
+          </span>
+          <div>
+            <h3>Other requests</h3>
+            <p>
+              Scout checks compatibility before setup. It explains missing
+              capabilities and keeps your requested conditions unchanged.
             </p>
           </div>
         </div>

@@ -55,10 +55,10 @@ test("anonymous draft stays in context while sign-in opens from the watch flow",
     page.getByRole("heading", { name: "How Scout plans a monitor" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Uniswap · first-class", exact: true }),
+    page.getByRole("heading", { name: "Uniswap V3 · Ethereum", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Other onchain intents", exact: true }),
+    page.getByRole("heading", { name: "USDC transfers · Base", exact: true }),
   ).toBeVisible();
   await page.keyboard.press("Escape");
 

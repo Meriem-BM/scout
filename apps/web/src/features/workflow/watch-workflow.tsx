@@ -5,12 +5,15 @@ import {
   ChevronDown as ChevronDownIcon,
   Code as CodeBracketIcon,
   TriangleAlert as ExclamationTriangleIcon,
-  Play as PlayIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-import { type Watch, workflowLabel } from "@scout/domain";
+import {
+  type Watch,
+  WATCH_STARTERS,
+  workflowPresentation,
+} from "@scout/domain";
 
 import { useDateTime } from "../workspace/formatting";
 import { buttonClassName } from "../workspace/primitives";
@@ -18,6 +21,7 @@ import { WorkflowSkeleton } from "../workspace/skeletons";
 import { Busy, ErrorNotice } from "../workspace/ui";
 
 import { useWatchWorkflow } from "./use-watch-workflow";
+import { WorkflowOutcome } from "./workflow-outcome";
 
 function stageLabel(stage: string) {
   if (
@@ -69,6 +73,10 @@ export function WatchCreationWorkflow({ watch }: { watch: Watch }) {
     retry,
   } = useWatchWorkflow(watch);
 
+  const presentation = workflow ? workflowPresentation(workflow) : null;
+  const prompt = workflow?.originalPrompt ?? watch.prompt;
+  const starter = WATCH_STARTERS.find((item) => item.prompt === prompt.trim());
+
   return (
     <div className="workflow-page">
       <Link className="detail-back" href="/watches">
@@ -76,14 +84,16 @@ export function WatchCreationWorkflow({ watch }: { watch: Watch }) {
       </Link>
       <header className="workflow-header">
         <div>
-          <h1>{workflow?.originalPrompt ?? watch.prompt}</h1>
+          <h1>{starter?.label ?? prompt}</h1>
+          {starter && <p>{starter.description}</p>}
         </div>
         <div
           className="workflow-live-state"
           data-stage={workflow?.state ?? watch.workflowStage ?? "RECEIVED"}
+          data-unsupported={presentation?.unsupported}
         >
           <span aria-hidden="true" />
-          {workflow ? workflowLabel(workflow.state) : "Loading workflow"}
+          {presentation?.label ?? "Loading workflow"}
         </div>
       </header>
 
@@ -94,76 +104,12 @@ export function WatchCreationWorkflow({ watch }: { watch: Watch }) {
         ) : null
       ) : (
         <div className="workflow-layout">
-          <div className="workflow-timeline" aria-live="polite">
-            <div className="workflow-panel-heading">
-              <CodeBracketIcon aria-hidden="true" />
-              <h2>
-                {workflow.state === "FAILED"
-                  ? "Workflow needs attention"
-                  : workflow.state === "LIVE"
-                    ? "Watch activated"
-                    : workflow.state === "NEEDS_CLARIFICATION"
-                      ? "Waiting for your input"
-                      : "Building your Watch"}
-              </h2>
-              <span>Saved activity</span>
-            </div>
-            <div className="workflow-panel-events">
-              {workflow.events.map((event, index) => (
-                <article
-                  className="workflow-event"
-                  data-status={event.status}
-                  data-current={
-                    index === workflow.events.length - 1 &&
-                    !["LIVE", "FAILED", "NEEDS_CLARIFICATION"].includes(
-                      workflow.state,
-                    )
-                  }
-                  key={event.id}
-                >
-                  <div className="workflow-event-rail">
-                    <span
-                      className="workflow-event-icon"
-                      aria-label={
-                        event.status === "active"
-                          ? "Recorded activity"
-                          : event.status
-                      }
-                    >
-                      {event.status === "complete" ? (
-                        <CheckIcon />
-                      ) : event.status === "failed" ? (
-                        <ExclamationTriangleIcon />
-                      ) : (
-                        <span className="workflow-activity-dot" />
-                      )}
-                    </span>
-                    {index < workflow.events.length - 1 && <i />}
-                  </div>
-                  <div className="workflow-event-body">
-                    <div>
-                      <h2>{event.title}</h2>
-                      <span className="workflow-stage-label">
-                        {stageLabel(event.stage)}
-                      </span>
-                    </div>
-                    {event.summary && <p>{event.summary}</p>}
-                    <RecordedProgress metadata={event.metadata} />
-                    <details>
-                      <summary>
-                        <ChevronDownIcon /> View details
-                      </summary>
-                      <time dateTime={event.createdAt}>
-                        {dateTime(event.createdAt)}
-                      </time>
-                      {Object.keys(event.metadata).length > 0 && (
-                        <pre>{JSON.stringify(event.metadata, null, 2)}</pre>
-                      )}
-                    </details>
-                  </div>
-                </article>
-              ))}
-            </div>
+          <div className="workflow-timeline">
+            <WorkflowOutcome
+              workflow={workflow}
+              retrying={retrying}
+              retry={retry}
+            />
             {workflow.clarification && (
               <section
                 className="clarification-card"
@@ -173,7 +119,10 @@ export function WatchCreationWorkflow({ watch }: { watch: Watch }) {
                 <h2 id="clarification-title">
                   {workflow.clarification.question}
                 </h2>
-                <p>{workflow.clarification.reason}</p>
+                {workflow.clarification.reason !==
+                  workflow.clarification.question && (
+                  <p>{workflow.clarification.reason}</p>
+                )}
                 <div className="clarification-choices">
                   {workflow.clarification.choices.map((choice) => (
                     <button
@@ -219,48 +168,87 @@ export function WatchCreationWorkflow({ watch }: { watch: Watch }) {
                 )}
               </section>
             )}
-
-            {workflow.state === "FAILED" && (
-              <section className="workflow-failure">
-                <ExclamationTriangleIcon />
-                <div>
-                  <span>{workflow.errorCategory ?? "Workflow"}</span>
-                  <h2>
-                    {workflow.errorCategory === "VERIFICATION"
-                      ? "Pipeline could not be verified"
-                      : "Scout stopped before activation"}
-                  </h2>
-                  <p className="workflow-failure-message">
-                    {workflow.errorMessage ??
-                      "Scout stopped before activation."}
-                  </p>
-                  <p className="workflow-failure-note">
-                    Scout did not mark this Watch live. Completed outputs and
-                    diagnostics remain saved.
-                  </p>
-                  {workflow.recoverable && (
-                    <button
-                      className={buttonClassName("primary", "mt-4")}
-                      disabled={retrying}
-                      onClick={retry}
-                    >
-                      {retrying ? (
-                        <Busy label="Retrying saved work" />
-                      ) : (
-                        <>
-                          <PlayIcon />
-                          Retry saved work
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </section>
-            )}
+            <details className="workflow-history">
+              <summary>
+                <ChevronDownIcon />
+                Activity log <span>{workflow.events.length} saved steps</span>
+              </summary>
+              <div className="workflow-panel-heading">
+                <CodeBracketIcon aria-hidden="true" />
+                <h2>Setup activity</h2>
+                <span>Recorded events</span>
+              </div>
+              <div className="workflow-panel-events">
+                {workflow.events.map((event, index) => (
+                  <article
+                    className="workflow-event"
+                    data-status={event.status}
+                    data-current={
+                      index === workflow.events.length - 1 &&
+                      !["LIVE", "FAILED", "NEEDS_CLARIFICATION"].includes(
+                        workflow.state,
+                      )
+                    }
+                    key={event.id}
+                  >
+                    <div className="workflow-event-rail">
+                      <span
+                        className="workflow-event-icon"
+                        aria-label={
+                          event.status === "active"
+                            ? "Recorded activity"
+                            : event.status
+                        }
+                      >
+                        {event.status === "complete" ? (
+                          <CheckIcon />
+                        ) : event.status === "failed" ? (
+                          <ExclamationTriangleIcon />
+                        ) : (
+                          <span className="workflow-activity-dot" />
+                        )}
+                      </span>
+                      {index < workflow.events.length - 1 && <i />}
+                    </div>
+                    <div className="workflow-event-body">
+                      <div>
+                        <h2>{event.title}</h2>
+                        <span className="workflow-stage-label">
+                          {stageLabel(event.stage)}
+                        </span>
+                      </div>
+                      {event.summary && <p>{event.summary}</p>}
+                      <RecordedProgress metadata={event.metadata} />
+                      <details>
+                        <summary>
+                          <ChevronDownIcon /> View details
+                        </summary>
+                        <time dateTime={event.createdAt}>
+                          {dateTime(event.createdAt)}
+                        </time>
+                        {Object.keys(event.metadata).length > 0 && (
+                          <pre>{JSON.stringify(event.metadata, null, 2)}</pre>
+                        )}
+                      </details>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </details>
           </div>
 
           <aside className="workflow-proof">
-            <h2>What Scout knows</h2>
+            <h2>Saved setup details</h2>
+            {starter && (
+              <details className="workflow-request">
+                <summary>Full request</summary>
+                <p>{prompt}</p>
+              </details>
+            )}
+            <p className="workflow-proof-note">
+              Plans describe intended work. Check the verification report for
+              execution evidence.
+            </p>
             <ProofBlock
               title="Intent"
               value={
@@ -274,6 +262,13 @@ export function WatchCreationWorkflow({ watch }: { watch: Watch }) {
                         .map((item) => item.value)
                         .join(" / "),
                       activity: workflow.outputs.intent.activity.type.value,
+                      pools: workflow.outputs.intent.subject.contracts.map(
+                        (item) => item.value,
+                      ),
+                      conditions: workflow.outputs.intent.filters.map(
+                        (filter) =>
+                          `${filter.field} ${filter.operator} ${filter.value} ${filter.unit ?? ""}`,
+                      ),
                       assumptions: workflow.outputs.intent.assumptions,
                     }
                   : null
@@ -339,7 +334,7 @@ export function WatchCreationWorkflow({ watch }: { watch: Watch }) {
                       execution:
                         workflow.outputs.pipelinePlan.execution.status ===
                         "verified"
-                          ? "Verified executor"
+                          ? "Executor available; see verification"
                           : "Planning only",
                       package:
                         workflow.outputs.pipelinePlan.dependencies[0]
@@ -386,29 +381,31 @@ function ProofBlock({
   title: string;
   value: Record<string, unknown> | null;
 }) {
+  if (!value) {
+    return null;
+  }
+
   return (
-    <section data-ready={!!value}>
+    <section data-ready="true">
       <div>
-        <span>{value ? <CheckIcon /> : null}</span>
+        <span>
+          <CodeBracketIcon />
+        </span>
         <h3>{title}</h3>
       </div>
-      {value ? (
-        <dl>
-          {Object.entries(value).map(([key, item]) =>
-            item === undefined ||
-            item === null ||
-            item === "" ||
-            (Array.isArray(item) && !item.length) ? null : (
-              <div key={key}>
-                <dt>{key.replaceAll(/([A-Z])/g, " $1")}</dt>
-                <dd>{Array.isArray(item) ? item.join(" · ") : String(item)}</dd>
-              </div>
-            ),
-          )}
-        </dl>
-      ) : (
-        <p>Waiting for this stage.</p>
-      )}
+      <dl>
+        {Object.entries(value).map(([key, item]) =>
+          item === undefined ||
+          item === null ||
+          item === "" ||
+          (Array.isArray(item) && !item.length) ? null : (
+            <div key={key}>
+              <dt>{key.replaceAll(/([A-Z])/g, " $1")}</dt>
+              <dd>{Array.isArray(item) ? item.join(" · ") : String(item)}</dd>
+            </div>
+          ),
+        )}
+      </dl>
     </section>
   );
 }

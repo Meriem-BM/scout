@@ -15,7 +15,7 @@ import {
   useState,
 } from "react";
 
-import { EXAMPLES } from "@scout/domain";
+import { WATCH_STARTERS } from "@scout/domain";
 import { SketchArrow } from "@/components/ui/sketch-arrow";
 
 import { useScoutAuth } from "../account/auth-context";
@@ -99,8 +99,8 @@ export function WatchComposer() {
         <ScoutMark className="watch-intro-mark" />
         <h1 id="composer-heading">Describe what matters onchain.</h1>
         <p>
-          Describe the signal. Scout builds the data pipeline, verifies it, and
-          watches the chain continuously.
+          Start with a supported setup or describe your own signal. Scout checks
+          what it can monitor before preparing and verifying the pipeline.
         </p>
       </div>
       <form
@@ -132,7 +132,7 @@ export function WatchComposer() {
         <div className="composer-bottom">
           <Modal
             title="How Scout plans a monitor"
-            description="Scout accepts generic onchain intent. Uniswap is its deepest first-class protocol integration."
+            description="See the networks, activities, and thresholds Scout can currently monitor."
             trigger={
               <button
                 type="button"
@@ -140,7 +140,7 @@ export function WatchComposer() {
                 aria-label="View monitoring capabilities"
               >
                 <SignalIcon />
-                Onchain <span>· protocol-aware</span>
+                Supported networks <span>· Ethereum & Base</span>
                 <ChevronDown className="size-4" aria-hidden="true" />
               </button>
             }
@@ -171,31 +171,35 @@ export function WatchComposer() {
         </div>
       </form>
       <p className="composer-capabilities">
-        Natural language <SketchArrow /> Verified Substreams pipeline{" "}
-        <SketchArrow /> Historical context <SketchArrow /> Live monitoring
+        Check support <SketchArrow /> Prepare data <SketchArrow /> Verify{" "}
+        <SketchArrow /> Start monitoring
       </p>
       <ErrorNotice message={error} />
       <div className="composer-examples">
-        <span className="composer-example-label">Start with an example</span>
+        <span className="composer-example-label">
+          Ready-to-configure examples
+        </span>
         <div className="example-row">
-          {[
-            "Watch $250K+ Uniswap swaps",
-            "Detect large liquidity removals",
-            "Follow unusual wallet activity",
-            "Flag token volume spikes",
-          ].map((label, i) => (
+          {WATCH_STARTERS.map((starter) => (
             <button
-              key={label}
+              key={starter.id}
               onClick={() => {
-                setDraft(EXAMPLES[i]!);
+                setDraft(starter.prompt);
                 document.getElementById("watch-prompt")?.focus();
               }}
             >
-              {label}
+              <span>
+                {starter.label}
+                <small>{starter.description}</small>
+              </span>
               <ArrowUpRightIcon aria-hidden="true" />
             </button>
           ))}
         </div>
+        <p className="composer-draft-note">
+          Examples use supported monitoring rules. Live activation still
+          requires connected providers and successful verification.
+        </p>
         {!signedIn && (
           <p className="composer-draft-note">Draft freely. No wallet needed.</p>
         )}
