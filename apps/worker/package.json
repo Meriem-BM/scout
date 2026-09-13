@@ -1,0 +1,21 @@
+{
+  "name": "@scout/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --env-file-if-exists=.env src/main.ts",
+    "start": "tsx src/main.ts",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@scout/domain": "workspace:*",
+    "@scout/database": "workspace:*",
+    "@scout/integrations": "workspace:*",
+    "@supabase/supabase-js": "2.115.0",
+    "viem": "2.56.3",
+    "zod": "4.5.4",
+    "tsx": "4.23.13"
+  }
+}
