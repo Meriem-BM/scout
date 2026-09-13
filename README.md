@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="apps/web/public/brands/scout.svg" width="80" height="80" alt="Scout icon" />
-</p>
-
 <h1 align="center">Scout</h1>
 
 <p align="center">Turn onchain monitoring intent into verified infrastructure.</p>
@@ -12,7 +8,7 @@ The aim is to make monitoring useful without requiring users to know contract ad
 
 **Current scope:** Ethereum Uniswap V3 WETH/USDC swaps and canonical USDC transfers on Base. Scout can understand more requests than it can deploy. Missing capabilities stop activation with an explanation. It does not trade autonomously.
 
-[Capabilities](#supported-capabilities) · [Architecture](#architecture) · [Local setup](#local-development) · [Tests](#validation) · [Integration evidence](docs/UNISWAP-INTEGRATION.md)
+[Capabilities](#supported-capabilities) · [Architecture](#architecture) · [Local setup](#local-development) · [Tests](#validation)
 
 ## History provenance
 
@@ -89,7 +85,7 @@ flowchart TD
   FINDING --> DELIVERY["Configured delivery"]
 ```
 
-The compiler migration is still incremental: existing executable contracts feed WatchProgram compilation, and Uniswap incident delivery coexists with generic findings. General composition deployment, generic investigation scheduling, and shared-stream supervision remain unfinished. See [architecture and invariants](docs/ARCHITECTURE.md).
+The compiler migration is still incremental: existing executable contracts feed WatchProgram compilation, and Uniswap incident delivery coexists with generic findings. General composition deployment, generic investigation scheduling, and shared-stream supervision remain unfinished.
 
 ## The Graph and Uniswap integration
 
@@ -99,19 +95,13 @@ The compiler migration is still incremental: existing executable contracts feed 
 
 **Verification has separate layers.** Pipeline checks compare real historical output with independent references. Watch acceptance checks cover matching semantics. A passing replay does not prove a currently healthy live stream or successful external delivery. Live health depends on observed heartbeat and block progress, and finalized monitoring includes finality latency.
 
-Reusable integration entry points:
+Reusable integration entry points are available in the packages and apps directories.
 
-- [Uniswap scope and reference programs](packages/domain/src/uniswap/) and [generic monitoring language/evaluator](packages/domain/src/monitoring/).
-- [V3 Rust decoder](substreams/), [package inspection](packages/integrations/src/substreams-registry.ts), and [Graph context provider](packages/integrations/src/graph.ts).
-- [Pipeline build and verification](apps/worker/src/pipeline/) and [durable creation workflow](apps/worker/src/workflow/watch-workflow.ts).
-
-Recorded evidence and limitations: [Uniswap integration](docs/UNISWAP-INTEGRATION.md), [chain-event acceptance artifact](docs/evidence/uniswap-integration.json), and [Base/Uniswap correctness evidence](docs/evidence/correctness-2026-09-13.json). These records distinguish actual provider observations from controlled cases.
-
-[FEEDBACK.md](FEEDBACK.md) contains developer integration feedback. The included evidence does not establish external Telegram/email delivery or a user-signed swap. No external feedback form submission is claimed.
+[FEEDBACK.md](FEEDBACK.md) contains developer integration feedback.
 
 ## Local development
 
-**Prerequisites:** Node **24.20.0**, pnpm **11.25.0**, and Docker for local Supabase. Local pipeline builds additionally need [Rust 1.98.1](substreams/rust-toolchain.toml), the WASM target, `protoc`, and the Substreams CLI. The worker Docker image bundles build dependencies.
+**Prerequisites:** Node **24.20.0**, pnpm **11.25.0**, and Docker for local Supabase. Local pipeline builds additionally need Rust 1.98.1, the WASM target, `protoc`, and the Substreams CLI. The worker Docker image bundles build dependencies.
 
 From the repository root:
 
@@ -124,7 +114,7 @@ pnpm setup:local
 
 `setup:local` writes ignored web/worker environment files with local Supabase settings and preserves existing provider settings. It does not provision authentication or provider credentials.
 
-Configure [Privy authentication](docs/AUTHENTICATION.md) and the required providers below. Start the web app and worker in separate terminals:
+Configure Privy authentication and the required providers below. Start the web app and worker in separate terminals:
 
 ```sh
 pnpm dev       # web app at http://localhost:3000
@@ -137,7 +127,7 @@ Accounts allow five non-archived Watches, including failed requests. **Delete wa
 
 ### Configuration
 
-Use [apps/web/.env.example](apps/web/.env.example) and [apps/worker/.env.example](apps/worker/.env.example) as the authoritative templates. Web settings belong in `apps/web/.env.local`; worker settings belong in `apps/worker/.env`.
+Use [apps/web/.env.example](apps/web/.env.example) and [apps/worker/.env.example](apps/worker/.env.example) as the authoritative templates.
 
 | Purpose                          | Main variables                                                                                                                                    |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -154,7 +144,7 @@ Use [apps/web/.env.example](apps/web/.env.example) and [apps/worker/.env.example
 
 Graph query credentials and Substreams data-plane credentials are distinct. Match session capacity to your provider account: one slot is reserved for verification, so capacity two allows one live stream. Never expose service credentials through `NEXT_PUBLIC_*` variables.
 
-See [deployment and webhook setup](docs/DEPLOYMENT.md) for service configuration and delivery requirements.
+See deployment documentation for service configuration and delivery requirements.
 
 ## Validation
 
@@ -175,33 +165,12 @@ Install the browser if needed with `pnpm exec playwright install chromium`. To u
 SCOUT_E2E_URL=http://localhost:3000 SCOUT_E2E_CHANNEL=chrome pnpm test:e2e
 ```
 
-Real-provider checks require credentials and previously verified local artifacts:
-
-```sh
-pnpm exec tsx --env-file-if-exists=apps/worker/.env tests/live/base-positive.ts
-pnpm exec tsx --env-file-if-exists=apps/worker/.env tests/live/program-uniswap.ts
-```
+Real-provider checks require credentials and previously verified local artifacts.
 
 After schema changes, add a migration and run `pnpm db:types`. Do not rewrite applied migrations. Test fixtures and replay results must remain distinguishable from live execution and external delivery.
-
-## Repository map
-
-| Path                                        | Responsibility                                                         |
-| ------------------------------------------- | ---------------------------------------------------------------------- |
-| `apps/web/src/features`                     | Feature screens, domain hooks, Query state and presentation            |
-| `apps/web/src/app`                          | Next.js pages, layouts and authenticated API routes                    |
-| `apps/worker/src/workflow`                  | Durable intent resolution and pipeline planning                        |
-| `apps/worker/src/pipeline`                  | Builds, verification, program admission and provider capacity          |
-| `apps/worker/src/ingestion`                 | Stream consumption, cursors, normalized events and findings            |
-| `apps/worker/src/jobs`                      | Investigation, delivery and reconciliation                             |
-| `packages/domain`                           | Typed contracts, capabilities, validation and deterministic evaluation |
-| `packages/integrations`                     | Substreams, Graph, RPC, AI and delivery adapters                       |
-| `packages/database` / `supabase/migrations` | Database access, ownership, schema and durable jobs                    |
-| `substreams`                                | Trusted Uniswap V3 Rust/WASM pipeline                                  |
-| `tests`                                     | Unit, database, browser and opt-in provider checks                     |
 
 ## Contributing and license
 
 Include a reproducible case and run the checks relevant to your change. Preserve historical uncertainty, immutable evidence, ownership isolation, worker leases, and replay idempotency. Keep credentials and local artifacts out of commits.
 
-Licensed under [MIT](LICENSE). See [dependency provenance](docs/DEPENDENCIES.md) and the [third-party license inventory](docs/THIRD_PARTY.json).
+Licensed under [MIT](LICENSE).
