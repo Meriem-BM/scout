@@ -1,0 +1,1260 @@
+{
+  "recordedAt": "2026-09-13",
+  "externalDeliveryAttempted": false,
+  "note": "Real provider runs and controlled fault injection are distinguished below. No above-$100K ETH/USDC first-time-trader alert was observed.",
+  "base-workflow": {
+    "watch": "857fc658-ff17-4640-a897-9fe12086a2ec",
+    "workflow": "2e87cb99-00a1-465a-94cf-b1b70545f9c7",
+    "observedWorkflowState": {
+      "state": "LIVE",
+      "error_code": null,
+      "error_message": null
+    },
+    "strategy": "PARAMETERIZE",
+    "parameters": [
+      {
+        "name": "query",
+        "value": "evt_addr:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913 && evt_sig:0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+        "module": "filtered_events"
+      }
+    ],
+    "selectedRef": "ethereum-common@v0.3.3",
+    "verification": {
+      "pipelineStatus": "PIPELINE_VERIFIED",
+      "intentAcceptance": {
+        "basis": "Controlled cases derived from an independently receipt-verified historical transfer; storage duplicate protection tested separately.",
+        "cases": [
+          {
+            "name": "matching_transfer",
+            "passed": true
+          },
+          {
+            "name": "wrong_token",
+            "passed": true
+          },
+          {
+            "name": "below_threshold",
+            "passed": true
+          },
+          {
+            "name": "stable_duplicate_identity",
+            "passed": true
+          }
+        ],
+        "status": "INTENT_ACCEPTANCE_VERIFIED"
+      },
+      "execution": {
+        "errors": [],
+        "toBlock": "51231906",
+        "fromBlock": "51231806",
+        "blocksTested": 101,
+        "eventsObserved": 4311
+      },
+      "duplicateCheck": {
+        "count": 0,
+        "passed": true
+      },
+      "missingEventCheck": {
+        "count": 0,
+        "passed": true
+      }
+    },
+    "events": [
+      {
+        "sequence": 1,
+        "type": "watch.received",
+        "stage": "RECEIVED",
+        "status": "complete",
+        "title": "Request received",
+        "metadata": {
+          "promptLength": 41
+        }
+      },
+      {
+        "sequence": 2,
+        "type": "intent.started",
+        "stage": "INTENT_RESOLVING",
+        "status": "active",
+        "title": "Understanding your request",
+        "metadata": {}
+      },
+      {
+        "sequence": 3,
+        "type": "intent.resolved",
+        "stage": "INTENT_READY",
+        "status": "complete",
+        "title": "Request understood",
+        "metadata": {
+          "activity": "transfer",
+          "assumptions": ["large transfer default threshold: 500000 USD"]
+        }
+      },
+      {
+        "sequence": 4,
+        "type": "data.plan.started",
+        "stage": "DATA_PLANNING",
+        "status": "active",
+        "title": "Planning required blockchain data",
+        "metadata": {}
+      },
+      {
+        "sequence": 5,
+        "type": "data.plan.ready",
+        "stage": "DATA_PLANNING",
+        "status": "complete",
+        "title": "Blockchain data plan ready",
+        "metadata": {
+          "streamFields": 8
+        }
+      },
+      {
+        "sequence": 6,
+        "type": "packages.search.started",
+        "stage": "PACKAGE_DISCOVERY",
+        "status": "active",
+        "title": "Searching existing Substreams",
+        "metadata": {}
+      },
+      {
+        "sequence": 7,
+        "type": "packages.inspected",
+        "stage": "PACKAGE_EVALUATION",
+        "status": "active",
+        "title": "6 packages inspected",
+        "metadata": {
+          "query": "ERC-20 token transfer \u00b7 erc20 transfers \u00b7 ethereum token transfers \u00b7 evm events \u00b7 ethereum common",
+          "failures": [],
+          "candidates": [
+            {
+              "ref": "clanker-substreams@v0.3.0",
+              "score": 72,
+              "modules": [
+                "map_clanker_events",
+                "store_tokens",
+                "map_token_transfers",
+                "store_token_volume",
+                "store_token_transfer_counts",
+                "store_creator_fees",
+                "store_creator_token_counts",
+                "store_airdrop_claims_per_token",
+                "store_airdrop_volume_per_token",
+                "db_out"
+              ],
+              "network": "base",
+              "missingFields": 3,
+              "matchingFields": 5
+            },
+            {
+              "ref": "uniswap-third-party@v0.0.1",
+              "score": 18,
+              "modules": ["map_events"],
+              "network": "base",
+              "missingFields": 5,
+              "matchingFields": 3
+            },
+            {
+              "ref": "ethereum-common@v0.3.3",
+              "score": 12,
+              "modules": [
+                "all_events",
+                "all_calls",
+                "index_events",
+                "index_calls",
+                "index_events_and_calls",
+                "filtered_events",
+                "filtered_calls",
+                "filtered_transactions",
+                "filtered_events_and_calls"
+              ],
+              "network": null,
+              "missingFields": 7,
+              "matchingFields": 1
+            },
+            {
+              "ref": "coinranking-uniswap-v3@v0.2.0",
+              "score": -50,
+              "modules": [
+                "map_uniswap_ticker_output",
+                "uniswap:uni_v0_2_9:map_pools_created",
+                "uniswap:uni_v0_2_9:store_pools_created",
+                "uniswap:uni_v0_2_9:map_extract_data_types"
+              ],
+              "network": "mainnet",
+              "missingFields": 5,
+              "matchingFields": 3
+            },
+            {
+              "ref": "my-eth-common@v0.3.21",
+              "score": -56,
+              "modules": [
+                "all_events",
+                "all_calls",
+                "index_events",
+                "index_calls",
+                "index_events_and_calls",
+                "filtered_transactions"
+              ],
+              "network": null,
+              "missingFields": 7,
+              "matchingFields": 1
+            },
+            {
+              "ref": "coinranking-pancakeswap-v3-forks@v0.1.1",
+              "score": -64,
+              "modules": ["map_v3_ticker_output"],
+              "network": null,
+              "missingFields": 7,
+              "matchingFields": 1
+            }
+          ]
+        }
+      },
+      {
+        "sequence": 8,
+        "type": "packages.selected",
+        "stage": "PACKAGE_EVALUATION",
+        "status": "complete",
+        "title": "Reusable package selected",
+        "metadata": {
+          "strategy": "PARAMETERIZE",
+          "selectedRef": "ethereum-common@v0.3.3",
+          "alternatives": [
+            "clanker-substreams@v0.3.0",
+            "uniswap-third-party@v0.0.1"
+          ]
+        }
+      },
+      {
+        "sequence": 9,
+        "type": "pipeline.plan.started",
+        "stage": "PIPELINE_PLANNING",
+        "status": "active",
+        "title": "Choosing the pipeline architecture",
+        "metadata": {}
+      },
+      {
+        "sequence": 10,
+        "type": "pipeline.plan.validated",
+        "stage": "PLAN_VALIDATION",
+        "status": "complete",
+        "title": "Architecture validated",
+        "metadata": {
+          "findings": [
+            {
+              "message": "Fixed parameter binding contract; deployment still requires pipeline and intent acceptance checks.",
+              "severity": "info"
+            }
+          ],
+          "strategy": "PARAMETERIZE",
+          "generatedModules": []
+        }
+      },
+      {
+        "sequence": 11,
+        "type": "pipeline.building",
+        "stage": "BUILDING",
+        "status": "complete",
+        "title": "Published package integrity verified",
+        "metadata": {
+          "strategy": "PARAMETERIZE",
+          "parameters": [
+            {
+              "name": "query",
+              "value": "evt_addr:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913 && evt_sig:0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+              "module": "filtered_events"
+            }
+          ],
+          "packageSha256": "67cfcb8f52a65611d80d2fd6ee951ecb77d848ddcbda0eb5aac839e880b1e020"
+        }
+      },
+      {
+        "sequence": 12,
+        "type": "pipeline.testing",
+        "stage": "TESTING",
+        "status": "active",
+        "title": "Testing on finalized Base blocks",
+        "metadata": {
+          "toBlock": "51231906",
+          "fromBlock": "51231806"
+        }
+      },
+      {
+        "sequence": 13,
+        "type": "pipeline.semantic_verifying",
+        "stage": "SEMANTIC_VERIFYING",
+        "status": "complete",
+        "title": "Pipeline and intent acceptance verified",
+        "metadata": {
+          "toBlock": "51231906",
+          "fromBlock": "51231806",
+          "eventsObserved": 4311,
+          "pipelineStatus": "PIPELINE_VERIFIED",
+          "intentAcceptance": {
+            "basis": "Controlled cases derived from an independently receipt-verified historical transfer; storage duplicate protection tested separately.",
+            "cases": [
+              {
+                "name": "matching_transfer",
+                "passed": true
+              },
+              {
+                "name": "wrong_token",
+                "passed": true
+              },
+              {
+                "name": "below_threshold",
+                "passed": true
+              },
+              {
+                "name": "stable_duplicate_identity",
+                "passed": true
+              }
+            ],
+            "status": "INTENT_ACCEPTANCE_VERIFIED"
+          }
+        }
+      },
+      {
+        "sequence": 14,
+        "type": "deployment.connected",
+        "stage": "DEPLOYING",
+        "status": "complete",
+        "title": "Live stream prepared",
+        "metadata": {
+          "deploymentId": "741ab1d4-9c71-494e-849c-967fc267333e"
+        }
+      },
+      {
+        "sequence": 15,
+        "type": "deployment.verifying",
+        "stage": "DEPLOYMENT_VERIFYING",
+        "status": "active",
+        "title": "Verifying live connection",
+        "metadata": {
+          "deploymentId": "741ab1d4-9c71-494e-849c-967fc267333e"
+        }
+      },
+      {
+        "sequence": 16,
+        "type": "deployment.catchup",
+        "stage": "CATCHING_UP",
+        "status": "active",
+        "title": "Catching up with Base",
+        "metadata": {
+          "networkHead": "51231726",
+          "pipelineHead": "51231906"
+        }
+      },
+      {
+        "sequence": 17,
+        "type": "deployment.live",
+        "stage": "LIVE",
+        "status": "complete",
+        "title": "Watch is live",
+        "metadata": {
+          "strategy": "PARAMETERIZE",
+          "networkHead": "51231906",
+          "pipelineHead": "51231916"
+        }
+      }
+    ],
+    "note": "Isolated test Watch paused after the run."
+  },
+  "uniswap-workflow": {
+    "watch": "f311a8bf-b83d-4929-96f3-647456a55792",
+    "workflow": "1332a6f2-3ebb-45cb-8da0-43b1ae644b41",
+    "observedWorkflowState": {
+      "state": "LIVE",
+      "error_code": null,
+      "error_message": null
+    },
+    "strategy": "COMPOSE",
+    "parameters": [
+      {
+        "name": "query",
+        "value": "resolved pool addresses + Uniswap V3 Swap signature",
+        "module": "index_events"
+      },
+      {
+        "name": "scope",
+        "value": "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640,0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8;0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "module": "map_watch"
+      }
+    ],
+    "selectedRef": "ethereum-common@v0.3.3",
+    "verification": {
+      "pipelineStatus": "PIPELINE_VERIFIED",
+      "intentAcceptance": {
+        "basis": "Controlled boundary/decision cases derived from a real historical event. These are not claims of historical first-time traders or delivery.",
+        "cases": [
+          {
+            "name": "matching_swap",
+            "passed": true
+          },
+          {
+            "name": "below_threshold",
+            "passed": true
+          },
+          {
+            "name": "previous_trader_suppressed",
+            "passed": true
+          },
+          {
+            "name": "first_trader_accepted",
+            "passed": true
+          },
+          {
+            "name": "unknown_history_pending",
+            "passed": true
+          },
+          {
+            "name": "actor_preserved",
+            "passed": true
+          }
+        ],
+        "status": "INTENT_ACCEPTANCE_VERIFIED"
+      },
+      "execution": {
+        "errors": [],
+        "toBlock": "25964670",
+        "fromBlock": "25964460",
+        "blocksTested": 211,
+        "eventsObserved": 69
+      },
+      "duplicateCheck": {
+        "count": 0,
+        "passed": true
+      },
+      "missingEventCheck": {
+        "count": 0,
+        "passed": true
+      }
+    },
+    "events": [
+      {
+        "sequence": 1,
+        "type": "watch.received",
+        "stage": "RECEIVED",
+        "status": "complete",
+        "title": "Request received",
+        "metadata": {
+          "promptLength": 94
+        }
+      },
+      {
+        "sequence": 2,
+        "type": "intent.started",
+        "stage": "INTENT_RESOLVING",
+        "status": "active",
+        "title": "Understanding your request",
+        "metadata": {}
+      },
+      {
+        "sequence": 3,
+        "type": "intent.clarification",
+        "stage": "NEEDS_CLARIFICATION",
+        "status": "warning",
+        "title": "One detail is needed",
+        "metadata": {
+          "field": "chain"
+        }
+      },
+      {
+        "sequence": 4,
+        "type": "clarification.answered",
+        "stage": "INTENT_RESOLVING",
+        "status": "complete",
+        "title": "Answer received",
+        "metadata": {
+          "field": "chain",
+          "answer": "Ethereum mainnet"
+        }
+      },
+      {
+        "sequence": 5,
+        "type": "intent.resolved",
+        "stage": "INTENT_READY",
+        "status": "complete",
+        "title": "Request understood",
+        "metadata": {
+          "activity": "swap",
+          "protocol": "uniswap",
+          "assumptions": ["Large swap threshold defaulted to 100000 USD"]
+        }
+      },
+      {
+        "sequence": 6,
+        "type": "data.clarification",
+        "stage": "NEEDS_CLARIFICATION",
+        "status": "warning",
+        "title": "One detail is needed",
+        "metadata": {
+          "field": "poolScope"
+        }
+      },
+      {
+        "sequence": 7,
+        "type": "clarification.answered",
+        "stage": "INTENT_RESOLVING",
+        "status": "complete",
+        "title": "Answer received",
+        "metadata": {
+          "field": "poolScope",
+          "answer": "Both supported pools: 0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640, 0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8"
+        }
+      },
+      {
+        "sequence": 8,
+        "type": "intent.resolved",
+        "stage": "INTENT_READY",
+        "status": "complete",
+        "title": "Request understood",
+        "metadata": {
+          "activity": "swap",
+          "protocol": "uniswap_v3",
+          "assumptions": ["Large swap threshold defaulted to 100000 USD"]
+        }
+      },
+      {
+        "sequence": 9,
+        "type": "data.plan.started",
+        "stage": "DATA_PLANNING",
+        "status": "active",
+        "title": "Planning required blockchain data",
+        "metadata": {}
+      },
+      {
+        "sequence": 10,
+        "type": "data.plan.ready",
+        "stage": "DATA_PLANNING",
+        "status": "complete",
+        "title": "Blockchain data plan ready",
+        "metadata": {
+          "streamFields": 11
+        }
+      },
+      {
+        "sequence": 11,
+        "type": "packages.search.started",
+        "stage": "PACKAGE_DISCOVERY",
+        "status": "active",
+        "title": "Searching existing Substreams",
+        "metadata": {}
+      },
+      {
+        "sequence": 12,
+        "type": "packages.inspected",
+        "stage": "PACKAGE_EVALUATION",
+        "status": "active",
+        "title": "6 packages inspected",
+        "metadata": {
+          "query": "uniswap_v3 v3 swap \u00b7 uniswap \u00b7 uniswap v3 \u00b7 uniswap v4 \u00b7 dex swaps \u00b7 pool events \u00b7 liquidity events \u00b7 ethereum common",
+          "failures": [],
+          "candidates": [
+            {
+              "ref": "uniswap-v4-substreams@v0.1.1",
+              "score": 65,
+              "modules": ["map_events"],
+              "network": "mainnet",
+              "missingFields": 7,
+              "matchingFields": 4
+            },
+            {
+              "ref": "uniswap-v3@v0.2.10",
+              "score": 65,
+              "modules": [
+                "graph_out",
+                "uni_v0_2_9:map_pools_created",
+                "uni_v0_2_9:store_pools_created",
+                "uni_v0_2_9:store_tokens",
+                "uni_v0_2_9:store_pool_count",
+                "uni_v0_2_9:map_tokens_whitelist_pools",
+                "uni_v0_2_9:store_tokens_whitelist_pools",
+                "uni_v0_2_9:map_extract_data_types",
+                "uni_v0_2_9:store_pool_sqrt_price",
+                "uni_v0_2_9:store_prices",
+                "uni_v0_2_9:store_pool_liquidities",
+                "uni_v0_2_9:store_total_tx_counts",
+                "uni_v0_2_9:store_swaps_volume",
+                "uni_v0_2_9:store_native_amounts",
+                "uni_v0_2_9:store_eth_prices",
+                "uni_v0_2_9:store_token_tvl",
+                "uni_v0_2_9:store_derived_tvl",
+                "uni_v0_2_9:store_derived_factory_tvl",
+                "uni_v0_2_9:store_ticks_liquidities",
+                "uni_v0_2_9:store_positions",
+                "uni_v0_2_9:store_min_windows",
+                "uni_v0_2_9:store_max_windows",
+                "uni_v0_2_9:graph_out"
+              ],
+              "network": "mainnet",
+              "missingFields": 7,
+              "matchingFields": 4
+            },
+            {
+              "ref": "host-uniswap-v3@v0.2.11",
+              "score": 65,
+              "modules": [
+                "map_pools_created",
+                "store_pools_created",
+                "store_tokens",
+                "store_pool_count",
+                "map_tokens_whitelist_pools",
+                "store_tokens_whitelist_pools",
+                "map_extract_data_types",
+                "store_pool_sqrt_price",
+                "store_prices",
+                "store_pool_liquidities",
+                "store_total_tx_counts",
+                "store_swaps_volume",
+                "store_native_amounts",
+                "store_eth_prices",
+                "store_token_tvl",
+                "store_derived_tvl",
+                "store_derived_factory_tvl",
+                "store_ticks_liquidities",
+                "store_positions",
+                "store_min_windows",
+                "store_max_windows",
+                "graph_out"
+              ],
+              "network": "mainnet",
+              "missingFields": 7,
+              "matchingFields": 4
+            },
+            {
+              "ref": "coinranking-uniswap-v3@v0.2.0",
+              "score": 57,
+              "modules": [
+                "map_uniswap_ticker_output",
+                "uniswap:uni_v0_2_9:map_pools_created",
+                "uniswap:uni_v0_2_9:store_pools_created",
+                "uniswap:uni_v0_2_9:map_extract_data_types"
+              ],
+              "network": "mainnet",
+              "missingFields": 7,
+              "matchingFields": 4
+            },
+            {
+              "ref": "uniswap-v3-positions-nft@v0.1.3",
+              "score": 55,
+              "modules": ["map_events", "db_out", "graph_out"],
+              "network": "mainnet",
+              "missingFields": 9,
+              "matchingFields": 2
+            },
+            {
+              "ref": "ethereum-common@v0.3.3",
+              "score": 10,
+              "modules": [
+                "all_events",
+                "all_calls",
+                "index_events",
+                "index_calls",
+                "index_events_and_calls",
+                "filtered_events",
+                "filtered_calls",
+                "filtered_transactions",
+                "filtered_events_and_calls"
+              ],
+              "network": null,
+              "missingFields": 10,
+              "matchingFields": 1
+            }
+          ]
+        }
+      },
+      {
+        "sequence": 13,
+        "type": "packages.selected",
+        "stage": "PACKAGE_EVALUATION",
+        "status": "complete",
+        "title": "Reusable package selected",
+        "metadata": {
+          "strategy": "COMPOSE",
+          "selectedRef": "ethereum-common@v0.3.3",
+          "alternatives": [
+            "uniswap-v4-substreams@v0.1.1",
+            "uniswap-v3@v0.2.10",
+            "host-uniswap-v3@v0.2.11",
+            "coinranking-uniswap-v3@v0.2.0"
+          ]
+        }
+      },
+      {
+        "sequence": 14,
+        "type": "pipeline.plan.started",
+        "stage": "PIPELINE_PLANNING",
+        "status": "active",
+        "title": "Choosing the pipeline architecture",
+        "metadata": {}
+      },
+      {
+        "sequence": 15,
+        "type": "pipeline.plan.validated",
+        "stage": "PLAN_VALIDATION",
+        "status": "complete",
+        "title": "Architecture validated",
+        "metadata": {
+          "findings": [
+            {
+              "message": "Every required Uniswap swap field has an implementation boundary.",
+              "severity": "info"
+            },
+            {
+              "message": "Deterministic rules, Graph context, investigation, and delivery remain outside WASM.",
+              "severity": "info"
+            },
+            {
+              "message": "No stateful Substreams store is required.",
+              "severity": "info"
+            }
+          ],
+          "strategy": "COMPOSE",
+          "generatedModules": ["map_swaps", "map_watch"]
+        }
+      },
+      {
+        "sequence": 16,
+        "type": "pipeline.building",
+        "stage": "BUILDING",
+        "status": "active",
+        "title": "Building the pipeline",
+        "metadata": {}
+      },
+      {
+        "sequence": 17,
+        "type": "pipeline.building",
+        "stage": "BUILDING",
+        "status": "complete",
+        "title": "Build passed",
+        "metadata": {
+          "sourceHash": "5b0348c81997fe0ed6ebd15d21f99e3c3626ec555f43ad2e0f23cfc82160c346",
+          "templateVersion": "scout-v3-bidirectional"
+        }
+      },
+      {
+        "sequence": 18,
+        "type": "pipeline.packaging",
+        "stage": "PACKAGING",
+        "status": "complete",
+        "title": "Package created",
+        "metadata": {
+          "artifactHash": "ed3ae5d67b9b450e95c25efa5414a96fdb640ac680d127315c3b2102c68d75a4",
+          "packageSha256": "8cdcd3c57a14f84d54a254f0da2771ef7249308f043e8915c155e81c251a5637"
+        }
+      },
+      {
+        "sequence": 19,
+        "type": "pipeline.testing",
+        "stage": "TESTING",
+        "status": "active",
+        "title": "Testing on Ethereum history",
+        "metadata": {
+          "stopBlock": "25964671",
+          "startBlock": "25964460",
+          "referenceEvents": 69
+        }
+      },
+      {
+        "sequence": 20,
+        "type": "pipeline.testing",
+        "stage": "TESTING",
+        "status": "complete",
+        "title": "Historical execution passed",
+        "metadata": {
+          "blocksTested": 211,
+          "outputBlocks": 55,
+          "valuedEvents": 1,
+          "eventsObserved": 69
+        }
+      },
+      {
+        "sequence": 21,
+        "type": "pipeline.semantic_verifying",
+        "stage": "SEMANTIC_VERIFYING",
+        "status": "active",
+        "title": "Verifying event semantics",
+        "metadata": {
+          "referenceSource": "The Graph subgraph 5zvR82QoaXYFyDEKLZ9t6v9adgnptxYpKpSbxtgVENFV"
+        }
+      },
+      {
+        "sequence": 22,
+        "type": "pipeline.semantic_verifying",
+        "stage": "SEMANTIC_VERIFYING",
+        "status": "complete",
+        "title": "Pipeline output verified; intent acceptance checked",
+        "metadata": {
+          "status": "verified",
+          "comparisons": 276,
+          "duplicateCount": 0
+        }
+      },
+      {
+        "sequence": 23,
+        "type": "deployment.connected",
+        "stage": "DEPLOYING",
+        "status": "complete",
+        "title": "Live stream prepared",
+        "metadata": {
+          "deploymentId": "7ce721e3-1e81-4da3-a7e2-5b4151b8070f"
+        }
+      },
+      {
+        "sequence": 24,
+        "type": "deployment.verifying",
+        "stage": "DEPLOYMENT_VERIFYING",
+        "status": "active",
+        "title": "Verifying live connection",
+        "metadata": {
+          "deploymentId": "7ce721e3-1e81-4da3-a7e2-5b4151b8070f"
+        }
+      },
+      {
+        "sequence": 25,
+        "type": "deployment.catchup",
+        "stage": "CATCHING_UP",
+        "status": "active",
+        "title": "Catching up with Ethereum",
+        "metadata": {
+          "lag": "105",
+          "networkHead": "25964671",
+          "pipelineHead": "25964566"
+        }
+      },
+      {
+        "sequence": 26,
+        "type": "deployment.live",
+        "stage": "LIVE",
+        "status": "complete",
+        "title": "Watch is live",
+        "metadata": {
+          "lag": "5",
+          "networkHead": "25964671",
+          "deploymentId": "7ce721e3-1e81-4da3-a7e2-5b4151b8070f",
+          "pipelineHead": "25964666"
+        }
+      }
+    ],
+    "note": "Isolated test Watch paused after the run."
+  },
+  "base-positive": {
+    "mode": "REAL_HISTORICAL_SUBSTREAMS_TO_DATABASE",
+    "watch": "857fc658-ff17-4640-a897-9fe12086a2ec",
+    "deployment": "741ab1d4-9c71-494e-849c-967fc267333e",
+    "block": "51233350",
+    "observed": 98,
+    "positive": [
+      {
+        "id": "8453:0x0d9afc0b73ed623b27c24af317049faa0a8e1965966b8aedb3c1470234c9ec46:0xc1c757d4fa0754608dea5bf869b35e0950a9ca06c031a24b5ee949cca900c5b1:942",
+        "chainId": 8453,
+        "block": {
+          "number": "51233350",
+          "hash": "0x0d9afc0b73ed623b27c24af317049faa0a8e1965966b8aedb3c1470234c9ec46",
+          "timestamp": 1789256047
+        },
+        "transaction": {
+          "hash": "0xc1c757d4fa0754608dea5bf869b35e0950a9ca06c031a24b5ee949cca900c5b1",
+          "initiator": "0xa91a456f64d0106c7ef817fe62f274c020dd68c9"
+        },
+        "eventIndex": 942,
+        "actor": {
+          "address": "0x61040e143a77f165ba44543af4a079f2c809d14b",
+          "role": "sender"
+        },
+        "subject": {
+          "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "kind": "token"
+        },
+        "eventType": "transfer",
+        "protocol": "erc20",
+        "assets": [
+          {
+            "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+            "amount": "525605795609",
+            "decimals": 6
+          }
+        ],
+        "value": {
+          "usdMicros": "525605795609",
+          "source": "nominal_usdc"
+        },
+        "metadata": {
+          "kind": "transfer",
+          "from": "0x61040e143a77f165ba44543af4a079f2c809d14b",
+          "to": "0x3fe04a59ebd38cf06080a6f60a98d124eb59392a"
+        },
+        "finality": "finalized",
+        "source": "substreams"
+      }
+    ],
+    "belowThreshold": 97,
+    "detections": 1,
+    "replays": 2,
+    "deliveryAttempted": false
+  },
+  "base-recovery": {
+    "watch": "857fc658-ff17-4640-a897-9fe12086a2ec",
+    "deployment": "741ab1d4-9c71-494e-849c-967fc267333e",
+    "snapshots": [
+      {
+        "attempt": 0,
+        "checkpoint": {
+          "block_number": "51233499",
+          "updated_at": "2026-09-13T00:00:50.797Z"
+        },
+        "counts": {
+          "candidates": 20981,
+          "above": 3,
+          "below": 20978,
+          "detections": 3
+        }
+      },
+      {
+        "attempt": 1,
+        "checkpoint": {
+          "block_number": "51233556",
+          "updated_at": "2026-09-13T00:01:11.484Z"
+        },
+        "counts": {
+          "candidates": 23416,
+          "above": 8,
+          "below": 23408,
+          "detections": 8
+        }
+      }
+    ],
+    "belowThresholdDetections": 0,
+    "duplicateProtection": "Database primary keys; repeated historical input and a separate-process cursor resume",
+    "deliveryAttempted": false
+  },
+  "uniswap-decisions": {
+    "mode": "REAL_HISTORICAL_SUBSTREAMS_GRAPH_DATABASE",
+    "watch": "f311a8bf-b83d-4929-96f3-647456a55792",
+    "results": [
+      {
+        "eventId": "1:0xaa754486103b0fbcf2eeb3a79ec11e6529e62a35ce60624e1d2dac4b9f3c7fa6:0xe2869578d0aa66e23f01870cbf2e2f81e3dcea2e0fa6b4948b8ddeb7c1920b0f:56",
+        "actor": "0x888c62b2361c193329e8934d85ceb04a5fd4bba0",
+        "value": "101962971314",
+        "prior": {
+          "status": "FOUND",
+          "protocol": "uniswap_v3",
+          "actor": "0x888c62b2361c193329e8934d85ceb04a5fd4bba0",
+          "beforeTransaction": "0xe2869578d0aa66e23f01870cbf2e2f81e3dcea2e0fa6b4948b8ddeb7c1920b0f",
+          "throughBlock": "25956343",
+          "blockHash": "0xaa754486103b0fbcf2eeb3a79ec11e6529e62a35ce60624e1d2dac4b9f3c7fa6",
+          "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+          "evidenceTransaction": "0x0021e07f7218b09e0b4338d0f7fdcbadcb5bb87cae6eca2adf6081a44530de1f",
+          "reason": "Earlier activity exists in indexed Uniswap V3 history, excluding the current transaction."
+        },
+        "decision": {
+          "status": "SUPPRESS",
+          "evidence": {
+            "actor": "0x888c62b2361c193329e8934d85ceb04a5fd4bba0",
+            "reason": "Earlier activity exists in indexed Uniswap V3 history, excluding the current transaction.",
+            "status": "FOUND",
+            "protocol": "uniswap_v3",
+            "blockHash": "0xaa754486103b0fbcf2eeb3a79ec11e6529e62a35ce60624e1d2dac4b9f3c7fa6",
+            "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+            "throughBlock": "25956343",
+            "beforeTransaction": "0xe2869578d0aa66e23f01870cbf2e2f81e3dcea2e0fa6b4948b8ddeb7c1920b0f",
+            "evidenceTransaction": "0x0021e07f7218b09e0b4338d0f7fdcbadcb5bb87cae6eca2adf6081a44530de1f"
+          }
+        },
+        "delivery": {
+          "delivery": "muted"
+        },
+        "deliveryAttempted": false
+      },
+      {
+        "eventId": "1:0x17f2616e75537e6217aa13de4723d1813d680e9191f7f790179005fa8e3e68e9:0x97e5276632a138fcd29a6cc4cfb21011b0375f1c19922c8247cff06d90e99c44:142",
+        "actor": "0x1a9a2fa7246e781fce3a5933777dfff3af0524ea",
+        "value": "209939243513",
+        "prior": {
+          "status": "FOUND",
+          "protocol": "uniswap_v3",
+          "actor": "0x1a9a2fa7246e781fce3a5933777dfff3af0524ea",
+          "beforeTransaction": "0x97e5276632a138fcd29a6cc4cfb21011b0375f1c19922c8247cff06d90e99c44",
+          "throughBlock": "25957029",
+          "blockHash": "0x17f2616e75537e6217aa13de4723d1813d680e9191f7f790179005fa8e3e68e9",
+          "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+          "evidenceTransaction": "0x0006a6b02000b343b55cd54fd284f3cd41d1b5dc36cd209314f64d7f86080c5f",
+          "reason": "Earlier activity exists in indexed Uniswap V3 history, excluding the current transaction."
+        },
+        "decision": {
+          "status": "SUPPRESS",
+          "evidence": {
+            "actor": "0x1a9a2fa7246e781fce3a5933777dfff3af0524ea",
+            "reason": "Earlier activity exists in indexed Uniswap V3 history, excluding the current transaction.",
+            "status": "FOUND",
+            "protocol": "uniswap_v3",
+            "blockHash": "0x17f2616e75537e6217aa13de4723d1813d680e9191f7f790179005fa8e3e68e9",
+            "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+            "throughBlock": "25957029",
+            "beforeTransaction": "0x97e5276632a138fcd29a6cc4cfb21011b0375f1c19922c8247cff06d90e99c44",
+            "evidenceTransaction": "0x0006a6b02000b343b55cd54fd284f3cd41d1b5dc36cd209314f64d7f86080c5f"
+          }
+        },
+        "delivery": {
+          "delivery": "muted"
+        },
+        "deliveryAttempted": false
+      },
+      {
+        "eventId": "1:0x5074a129713908b069b1516872d2844cdb7237816da4c8b1e4aed6ae2d26e7a5:0x23f0fd8162cdb7f95c3cd728faf65ffb033a9382ae0b6c234fd5d3341a437c55:9",
+        "actor": "0x5b43453fce04b92e190f391a83136bfbecedefd1",
+        "value": "260224802032",
+        "prior": {
+          "status": "FOUND",
+          "protocol": "uniswap_v3",
+          "actor": "0x5b43453fce04b92e190f391a83136bfbecedefd1",
+          "beforeTransaction": "0x23f0fd8162cdb7f95c3cd728faf65ffb033a9382ae0b6c234fd5d3341a437c55",
+          "throughBlock": "25956038",
+          "blockHash": "0x5074a129713908b069b1516872d2844cdb7237816da4c8b1e4aed6ae2d26e7a5",
+          "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+          "evidenceTransaction": "0x0000309a5d514ea24d27262a95f0230ece8fed25b36772b93afdce3371480fd3",
+          "reason": "Earlier activity exists in indexed Uniswap V3 history, excluding the current transaction."
+        },
+        "decision": {
+          "status": "SUPPRESS",
+          "evidence": {
+            "actor": "0x5b43453fce04b92e190f391a83136bfbecedefd1",
+            "reason": "Earlier activity exists in indexed Uniswap V3 history, excluding the current transaction.",
+            "status": "FOUND",
+            "protocol": "uniswap_v3",
+            "blockHash": "0x5074a129713908b069b1516872d2844cdb7237816da4c8b1e4aed6ae2d26e7a5",
+            "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+            "throughBlock": "25956038",
+            "beforeTransaction": "0x23f0fd8162cdb7f95c3cd728faf65ffb033a9382ae0b6c234fd5d3341a437c55",
+            "evidenceTransaction": "0x0000309a5d514ea24d27262a95f0230ece8fed25b36772b93afdce3371480fd3"
+          }
+        },
+        "delivery": {
+          "delivery": "muted"
+        },
+        "deliveryAttempted": false
+      }
+    ],
+    "deliveryAttempted": false
+  },
+  "uniswap-context-retry": {
+    "mode": "REAL_HISTORICAL_SUBSTREAMS_GRAPH_DATABASE",
+    "watch": "f311a8bf-b83d-4929-96f3-647456a55792",
+    "results": [
+      {
+        "eventId": "1:0x4cdd586314ef9712cb38e664c8e987bfeb1896a7613a97aa76a86e048a56b6d5:0x3fbd548493e755c5ed423483503f2c9fcd2da48f504b7004b3ee78e772bbaf8e:2",
+        "actor": "0x7bf30399dba8051c2bf191afe2cd07ea4e064625",
+        "value": "145493956083",
+        "prior": {
+          "status": "FOUND",
+          "protocol": "uniswap_v3",
+          "actor": "0x7bf30399dba8051c2bf191afe2cd07ea4e064625",
+          "beforeTransaction": "0x3fbd548493e755c5ed423483503f2c9fcd2da48f504b7004b3ee78e772bbaf8e",
+          "throughBlock": "25956126",
+          "blockHash": "0x4cdd586314ef9712cb38e664c8e987bfeb1896a7613a97aa76a86e048a56b6d5",
+          "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+          "evidenceTransaction": "0x00015d2cfa3f4d27a3f7b007cea9a7a8f923c602959f9852f57de89af980dc31",
+          "reason": "Earlier activity exists in indexed Uniswap V3 history, excluding the current transaction."
+        },
+        "decision": {
+          "status": "SUPPRESS",
+          "evidence": {
+            "actor": "0x7bf30399dba8051c2bf191afe2cd07ea4e064625",
+            "reason": "Earlier activity exists in indexed Uniswap V3 history, excluding the current transaction.",
+            "status": "FOUND",
+            "protocol": "uniswap_v3",
+            "blockHash": "0x4cdd586314ef9712cb38e664c8e987bfeb1896a7613a97aa76a86e048a56b6d5",
+            "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+            "throughBlock": "25956126",
+            "beforeTransaction": "0x3fbd548493e755c5ed423483503f2c9fcd2da48f504b7004b3ee78e772bbaf8e",
+            "evidenceTransaction": "0x00015d2cfa3f4d27a3f7b007cea9a7a8f923c602959f9852f57de89af980dc31"
+          }
+        },
+        "pendingEvidence": {
+          "status": "PENDING",
+          "next_attempt_at": "2026-09-13T00:16:36.404Z",
+          "evidence": {
+            "reason": "No required historical predicate"
+          }
+        },
+        "delivery": {
+          "delivery": "muted"
+        },
+        "deliveryAttempted": false
+      }
+    ],
+    "deliveryAttempted": false
+  },
+  "first-traders": [
+    {
+      "swap": {
+        "origin": "0x888c62b2361c193329e8934d85ceb04a5fd4bba0",
+        "timestamp": "1734401567",
+        "logIndex": "69",
+        "amountUSD": "37093.24176053129529804213348365136",
+        "amount0": "-9.284594966122186903",
+        "amount1": "37143.667854",
+        "pool": {
+          "id": "0x11b815efb8f581194ae79006d24e0d814b7697f6"
+        },
+        "transaction": {
+          "id": "0x1f8854372740ea4d69e66938b1ead356f35b18142d801f82c5fcc1b65132bb4d",
+          "blockNumber": "21419189"
+        }
+      },
+      "prior": {
+        "status": "UNKNOWN",
+        "protocol": "uniswap_v3",
+        "actor": "0x888c62b2361c193329e8934d85ceb04a5fd4bba0",
+        "beforeTransaction": "0x1f8854372740ea4d69e66938b1ead356f35b18142d801f82c5fcc1b65132bb4d",
+        "throughBlock": "21419189",
+        "blockHash": "0xb0c124433dc2ef0dda536b2b930e07de30ec4f1ea3cbd3334f181449e33302f2",
+        "deployment": null,
+        "evidenceTransaction": null,
+        "reason": "The Graph did not prove coverage of the candidate's canonical block (errors=1, indexed=missing, hash=missing)."
+      }
+    },
+    {
+      "swap": {
+        "origin": "0x1a9a2fa7246e781fce3a5933777dfff3af0524ea",
+        "timestamp": "1786027583",
+        "logIndex": "821",
+        "amountUSD": "7555.893757662495446892721585279375",
+        "amount0": "0.11674448",
+        "amount1": "-7562.173003",
+        "pool": {
+          "id": "0x56534741cd8b152df6d48adf7ac51f75169a83b2"
+        },
+        "transaction": {
+          "id": "0x65b9055cea8c85cd1e4f8777c135b43cdcd4514a374581e9054b0df706efa231",
+          "blockNumber": "25696599"
+        }
+      },
+      "prior": {
+        "status": "NONE_WITH_PROVEN_COVERAGE",
+        "protocol": "uniswap_v3",
+        "actor": "0x1a9a2fa7246e781fce3a5933777dfff3af0524ea",
+        "beforeTransaction": "0x65b9055cea8c85cd1e4f8777c135b43cdcd4514a374581e9054b0df706efa231",
+        "throughBlock": "25696599",
+        "blockHash": "0xa8f13aa36269414d32650b67564fa31fc9a99384a75bfa9d4c5841f36bd4638a",
+        "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+        "evidenceTransaction": null,
+        "reason": "No earlier transaction in Uniswap V3: factory-origin manifest coverage and canonical candidate block verified; current transaction excluded."
+      }
+    },
+    {
+      "actor": "0x5b43453fce04b92e190f391a83136bfbecedefd1",
+      "error": "Graph earliest query unavailable"
+    }
+  ],
+  "controlledDatabase": {
+    "results": [
+      {
+        "tests": "A/B/C",
+        "mode": "CONTROLLED_DATABASE_ROLLBACK",
+        "decisions": [
+          {
+            "status": "ALERT",
+            "n": 1
+          },
+          {
+            "status": "PENDING",
+            "n": 1
+          },
+          {
+            "status": "SUPPRESS",
+            "n": 1
+          }
+        ],
+        "deliveryAttempted": false,
+        "outboxQueued": 1,
+        "pendingRetry": true
+      },
+      {
+        "test": "F",
+        "mode": "CONTROLLED_REPLAY",
+        "incidents": 3,
+        "finalDecisions": 3,
+        "outboxRows": 2,
+        "duplicateRows": 0,
+        "workflowEvents": [
+          {
+            "type": "deployment.live",
+            "stage": "LIVE"
+          }
+        ],
+        "deliveryAttempted": false
+      },
+      {
+        "test": "active_watch_catchup",
+        "detectedWhileBehind": true,
+        "deliveryAttempted": false
+      },
+      {
+        "tests": "D/E",
+        "mode": "CONTROLLED_DATABASE_ROLLBACK",
+        "candidateEvents": 2,
+        "detections": 1,
+        "duplicates": 0,
+        "deliveryAttempted": false
+      },
+      {
+        "test": "operational",
+        "reservedVerificationSlot": true,
+        "staleAttemptRejected": true,
+        "stalePipelineGenerationRejected": true,
+        "staleLiveStatusRejected": true,
+        "downstreamInvalidated": true
+      }
+    ],
+    "allChangesRolledBack": true
+  },
+  "finalWorkerState": {
+    "deployments": [
+      {
+        "id": "b2184b54-6e34-463a-81e5-18a8a5d2eca6",
+        "name": "$100,000+ ETH buys",
+        "status": "live",
+        "state": "watching",
+        "last_block": "25966265",
+        "last_message_at": "2026-09-13T05:10:57.760Z",
+        "pipeline_verification": "PIPELINE_VERIFIED",
+        "acceptance_verification": "INTENT_ACCEPTANCE_VERIFIED",
+        "error": null
+      },
+      {
+        "id": "d368258e-3321-4fa0-95cc-26082c75e578",
+        "name": "$100,000+ ETH buys",
+        "status": "delayed",
+        "state": "delayed",
+        "last_block": "25964287",
+        "last_message_at": "2026-09-12T22:34:11.027Z",
+        "pipeline_verification": "PIPELINE_VERIFIED",
+        "acceptance_verification": "INTENT_ACCEPTANCE_VERIFIED",
+        "error": "Waiting for provider session capacity. One slot is reserved for verification."
+      }
+    ],
+    "sessions": [
+      {
+        "kind": "live",
+        "expires_at": "2026-09-13T05:12:04.731Z"
+      }
+    ],
+    "worker": [
+      {
+        "last_seen": "2026-09-13T05:11:08.328Z"
+      }
+    ]
+  },
+  "validation": {
+    "typescriptTests": 153,
+    "typescriptTestFiles": 22,
+    "rustTests": 6,
+    "databaseCorrectness": "passed; rollback-only controlled writes",
+    "typecheck": "passed",
+    "targetedLint": "passed",
+    "webpackProductionBuild": "passed with third-party ox warning",
+    "turbopackBuild": "blocked by local CSS-worker port permission; escalated retry also failed",
+    "workerHealth": "ready"
+  }
+}
