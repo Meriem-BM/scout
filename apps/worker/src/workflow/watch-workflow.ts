@@ -169,6 +169,8 @@ export async function runWatchWorkflow(
       }
 
       if (resolved.status === "UNSUPPORTED") {
+        await put(sql, row.id, "intent", resolved.intent);
+
         const alternative = resolved.supportedAlternative
           ? ` ${resolved.supportedAlternative}`
           : "";

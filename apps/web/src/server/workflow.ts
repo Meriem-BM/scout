@@ -1,7 +1,11 @@
 import "server-only";
 import { z } from "zod";
 
-import { WatchWorkflowSchema } from "@scout/domain";
+import {
+  explainWatchCapabilities,
+  WatchProgramSchema,
+  WatchWorkflowSchema,
+} from "@scout/domain";
 
 import { admin } from "./auth";
 import { HttpError } from "./errors";
@@ -51,5 +55,36 @@ export async function readWorkflow(
     );
   }
 
-  return WatchWorkflowSchema.parse(value);
+  const workflow = WatchWorkflowSchema.parse(value);
+  // Account ownership was checked by the RPC before reading private artifacts.
+  const { data: artifacts, error: artifactError } = await admin()
+    .from("watch_workflow_outputs")
+    .select("kind,payload")
+    .eq("workflow_id", workflow.id)
+    .in("kind", ["watch_program", "capability_plan", "acceptance_report"]);
+
+  if (artifactError) {
+    throw new HttpError(
+      500,
+      "Scout could not load the saved capability checks.",
+    );
+  }
+
+  const saved = WatchProgramSchema.safeParse(
+    artifacts?.find((a) => a.kind === "watch_program")?.payload,
+  );
+  const capabilities = explainWatchCapabilities(
+    workflow.outputs.intent,
+    saved.success ? saved.data : null,
+  );
+
+  capabilities.plan = {
+    current: capabilities.plan,
+    recorded:
+      artifacts?.find((a) => a.kind === "capability_plan")?.payload ?? null,
+    acceptance:
+      artifacts?.find((a) => a.kind === "acceptance_report")?.payload ?? null,
+  };
+
+  return { ...workflow, capabilities };
 }

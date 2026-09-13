@@ -1,4 +1,7 @@
-import { resolveWatchStarter } from "@scout/domain";
+import {
+  resolveSimpleMonitoringRequest,
+  resolveWatchStarter,
+} from "@scout/domain";
 import { GroqAdapter } from "@scout/integrations/ai";
 import { IntegrationError } from "@scout/integrations/http";
 
@@ -9,7 +12,9 @@ export async function resolveWorkflowIntent(
   answers: Array<{ field: string; answer: string }>,
   config: Pick<WorkerConfig, "GROQ_API_KEY" | "GROQ_MODEL">,
 ) {
-  const starter = answers.length === 0 ? resolveWatchStarter(prompt) : null;
+  const starter =
+    (answers.length === 0 ? resolveWatchStarter(prompt) : null) ??
+    resolveSimpleMonitoringRequest(prompt, answers);
 
   if (starter) {
     return {
