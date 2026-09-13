@@ -169,7 +169,7 @@ export function describeCondition(condition: Condition): string {
   }
 
   if (condition.kind === "large_swap") {
-    return `A sale above ${usd(units(condition.usd, 6))}`;
+    return `A trade above ${usd(units(condition.usd, 6))}`;
   }
 
   if (condition.kind === "pool_selling") {

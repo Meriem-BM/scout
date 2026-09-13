@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { WatchCapabilityExplanationSchema } from "./monitoring/explanation";
 import { WATCH_ACTIVITY_TYPES } from "./protocols";
 
 export const WorkflowStageSchema = z.enum([
@@ -460,6 +461,7 @@ export const WatchWorkflowSchema = z.object({
   recoverable: z.boolean(),
   events: z.array(WorkflowEventSchema),
   clarification: ClarificationSchema.nullable(),
+  capabilities: WatchCapabilityExplanationSchema.optional(),
   outputs: z.object({
     intent: WatchIntentSpecSchema.nullable(),
     dataRequirements: DataRequirementSpecSchema.nullable(),

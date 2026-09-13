@@ -49,13 +49,8 @@ export interface ProtocolProfile {
     queries: string[];
   };
   presentation: {
-    accent: "blue" | "green" | "neutral" | "pink";
-    description: string;
-    shortName: string;
     subjectVisual: "pair" | "protocol" | "wallet";
   };
-  supportedChains: string[];
-  supportedVersions: string[];
   terminology: {
     activities: string[];
     entities: string[];
@@ -75,8 +70,6 @@ export const UniswapProtocolProfile: ProtocolProfile = {
   id: "uniswap",
   name: "Uniswap",
   aliases: ["uniswap", "uniswap-v2", "uniswap-v3", "uniswap-v4"],
-  supportedChains: ["ethereum", "base", "arbitrum", "optimism"],
-  supportedVersions: ["v2", "v3", "v4"],
   terminology: {
     entities: ["pool", "pair", "liquidity position", "swap"],
     activities: [
@@ -264,10 +257,6 @@ export const UniswapProtocolProfile: ProtocolProfile = {
     "swap direction",
   ],
   presentation: {
-    shortName: "Uniswap",
-    description:
-      "Deep protocol support with live Substreams detection and historical Graph context.",
-    accent: "pink",
     subjectVisual: "pair",
   },
   execution: {
@@ -288,8 +277,6 @@ export const Erc20ProtocolProfile: ProtocolProfile = {
   id: "erc20",
   name: "ERC-20",
   aliases: ["erc20", "erc-20", "token transfer", "token transfers"],
-  supportedChains: ["ethereum", "base", "arbitrum", "optimism"],
-  supportedVersions: [],
   terminology: {
     entities: ["token", "wallet", "transfer"],
     activities: ["large transfer", "wallet inflow", "wallet outflow"],
@@ -352,9 +339,6 @@ export const Erc20ProtocolProfile: ProtocolProfile = {
     "log index",
   ],
   presentation: {
-    shortName: "Token transfers",
-    description: "Generic EVM token and wallet monitoring.",
-    accent: "blue",
     subjectVisual: "wallet",
   },
   execution: {},
@@ -364,8 +348,6 @@ export const AaveProtocolProfile: ProtocolProfile = {
   id: "aave",
   name: "Aave",
   aliases: ["aave"],
-  supportedChains: ["ethereum", "base", "arbitrum", "optimism"],
-  supportedVersions: ["v2", "v3"],
   terminology: {
     entities: ["position", "reserve", "liquidation"],
     activities: ["liquidation risk", "borrow", "repay", "liquidation"],
@@ -408,9 +390,6 @@ export const AaveProtocolProfile: ProtocolProfile = {
     "health factor inputs",
   ],
   presentation: {
-    shortName: "Aave",
-    description: "Protocol-aware lending intent planning.",
-    accent: "green",
     subjectVisual: "protocol",
   },
   execution: {},
@@ -420,8 +399,6 @@ export const GenericEvmProtocolProfile: ProtocolProfile = {
   id: "generic-evm",
   name: "Onchain",
   aliases: ["evm", "onchain", "contract"],
-  supportedChains: ["ethereum", "base", "arbitrum", "optimism"],
-  supportedVersions: [],
   terminology: {
     entities: ["wallet", "contract", "event", "transaction"],
     activities: ["wallet activity", "contract event", "value transfer"],
@@ -487,9 +464,6 @@ export const GenericEvmProtocolProfile: ProtocolProfile = {
     "contract address",
   ],
   presentation: {
-    shortName: "Onchain activity",
-    description: "Generic EVM event and wallet intent planning.",
-    accent: "neutral",
     subjectVisual: "wallet",
   },
   execution: {},

@@ -16,7 +16,17 @@ export type CapabilityState =
   | "REQUIRES_CLARIFICATION"
   | "UNSUPPORTED";
 
+export type CapabilityStatus =
+  "VERIFIED" | "AVAILABLE" | "PARTIAL" | "REQUIRES_PIPELINE" | "UNSUPPORTED";
+
 export type DataCapability = {
+  status: CapabilityStatus;
+  presentation: {
+    title: string;
+    description: string;
+    version: string | null;
+    limitations: readonly string[];
+  };
   id: string;
   chainId: number;
   eventType: string;
@@ -71,6 +81,17 @@ const commonFields: DataCapability["fields"] = {
 export const DATA_CAPABILITIES: readonly DataCapability[] = [
   {
     id: "UNISWAP_V4_LIQUIDITY_CHANGE",
+    status: "PARTIAL",
+    presentation: {
+      title: "Uniswap V4 liquidity changes",
+      version: "V4",
+      description:
+        "Watch liquidity increases or removals on Ethereum, across all V4 pools or a specified pool ID.",
+      limitations: [
+        "Scout can read liquidity changes, but cannot yet reliably calculate their token amounts or USD value.",
+        "The observed wallet is the transaction initiator, not proof of liquidity ownership.",
+      ],
+    },
     chainId: 1,
     eventType: "liquidity_change",
     protocol: "uniswap_v4",
@@ -113,6 +134,18 @@ export const DATA_CAPABILITIES: readonly DataCapability[] = [
   },
   {
     id: "base-usdc-transfer",
+    status: "AVAILABLE",
+    presentation: {
+      title: "Native USDC transfers",
+      version: null,
+      description:
+        "Monitor native USDC transfers on Base with an amount threshold.",
+      limitations: [
+        "Only native USDC on Base is supported by this transfer setup.",
+        "Dollar thresholds use nominal USDC value, not a market price feed.",
+        "Wallet filters, combined transfers and historical conditions are not yet supported by the transfer request builder.",
+      ],
+    },
     chainId: 8453,
     eventType: "transfer",
     protocol: "erc20",
@@ -131,6 +164,18 @@ export const DATA_CAPABILITIES: readonly DataCapability[] = [
   },
   {
     id: "ethereum-v3-swaps",
+    status: "AVAILABLE",
+    presentation: {
+      title: "Uniswap V3 swaps",
+      version: "V3",
+      description:
+        "Monitor ETH/USDC swaps, buy and sell direction, large trades and previous Uniswap activity.",
+      limitations: [
+        "Pool coverage is limited to the installed Ethereum ETH/USDC 0.05% and 0.30% pools; it is not all of Uniswap.",
+        "Wallet history is only treated as absent when Scout can prove the required historical coverage.",
+        "Time-window and unique-wallet rules exist in the monitoring engine, but automated verification of composed Watches is still limited.",
+      ],
+    },
     chainId: 1,
     eventType: "swap",
     protocol: "uniswap_v3",
@@ -251,7 +296,13 @@ export function planProgramCapabilities(
     add(
       "data",
       adapter?.id ?? `${program.source.eventType}:source`,
-      adapter ? "AVAILABLE_WITH_PARAMETERS" : "REQUIRES_DATA_PIPELINE",
+      adapter?.status === "UNSUPPORTED"
+        ? "UNSUPPORTED"
+        : adapter?.status === "REQUIRES_PIPELINE"
+          ? "REQUIRES_DATA_PIPELINE"
+          : adapter
+            ? "AVAILABLE_WITH_PARAMETERS"
+            : "REQUIRES_DATA_PIPELINE",
       adapter
         ? "The installed adapter can normalize this scope; package execution still requires verification."
         : "No installed adapter guarantees this source and scope. A decoder and acquisition verification are required.",
@@ -268,7 +319,9 @@ export function planProgramCapabilities(
       `field:${field}`,
       available && available.status !== "UNAVAILABLE"
         ? "AVAILABLE"
-        : "REQUIRES_DATA_PIPELINE",
+        : available?.status === "UNAVAILABLE"
+          ? "UNSUPPORTED"
+          : "REQUIRES_DATA_PIPELINE",
       available?.meaning ??
         "This field's semantics are not guaranteed by the selected source.",
     );
@@ -324,7 +377,10 @@ export function planProgramCapabilities(
     add(
       "valuation",
       "explicit_valuation",
-      adapter ? "AVAILABLE_WITH_PARAMETERS" : "UNSUPPORTED",
+      adapter?.fields.valueMicros &&
+        adapter.fields.valueMicros.status !== "UNAVAILABLE"
+        ? "AVAILABLE_WITH_PARAMETERS"
+        : "UNSUPPORTED",
       adapter?.id === "base-usdc-transfer"
         ? "Canonical USDC nominal denomination, not an oracle-backed USD price."
         : "Requires a block-bound, non-stale price source; missing prices never become zero.",
