@@ -1,0 +1,46 @@
+FROM rust:1.98.0-slim-bookworm@sha256:1469a27c125cb5a3aebfa4f4e4665d935b02fb72cc093b2c974b3d740e43f157 AS wasm
+# The 1.98.1 Docker tag is not published yet. The compiler itself is pinned to 1.98.1.
+RUN apt-get update && apt-get install -y --no-install-recommends protobuf-compiler ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /build
+COPY substreams/Cargo.toml substreams/Cargo.lock substreams/build.rs substreams/rust-toolchain.toml ./
+COPY substreams/src/ ./src/
+COPY substreams/proto/ ./proto/
+COPY substreams/abi/ ./abi/
+RUN rustup toolchain install 1.98.1 --profile minimal --target wasm32-unknown-unknown && cargo +1.98.1 build --locked --release --target wasm32-unknown-unknown
+
+FROM node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS dependencies
+RUN npm install --global pnpm@11.25.0
+WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+COPY patches/ ./patches/
+COPY scripts/install-hooks.mjs ./scripts/install-hooks.mjs
+COPY packages/domain/package.json ./packages/domain/package.json
+COPY packages/integrations/package.json ./packages/integrations/package.json
+COPY packages/database/package.json ./packages/database/package.json
+COPY apps/worker/package.json ./apps/worker/package.json
+COPY apps/web/package.json ./apps/web/package.json
+RUN HUSKY=0 pnpm install --frozen-lockfile --prod --filter @scout/worker...
+COPY packages/ ./packages/
+COPY apps/worker/ ./apps/worker/
+
+FROM node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS runtime
+ARG TARGETARCH
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl protobuf-compiler && rm -rf /var/lib/apt/lists/*
+RUN case "$TARGETARCH" in \
+      amd64) archive=substreams_linux_x86_64.tar.gz; checksum=6eef6182d8d9e3c0147a3d03f38fc2b9c0f96900d040132294a0b540e691ae67 ;; \
+      arm64) archive=substreams_linux_arm64.tar.gz; checksum=385ac239bf792e09936f19e08ac419c4bab64d79415c06a423f29ed8fd4c278b ;; \
+      *) exit 1 ;; \
+    esac && curl --fail --location --retry 3 "https://github.com/streamingfast/substreams/releases/download/v1.22.0/$archive" -o /tmp/substreams.tar.gz && echo "$checksum  /tmp/substreams.tar.gz" | sha256sum -c - && tar -xzf /tmp/substreams.tar.gz -C /usr/local/bin substreams && rm /tmp/substreams.tar.gz
+WORKDIR /app
+COPY --from=dependencies --chown=node:node /app /app
+COPY --chown=node:node substreams/ /app/substreams/
+COPY --from=wasm --chown=node:node /build/target/wasm32-unknown-unknown/release/scout_streams.wasm /app/substreams/target/wasm32-unknown-unknown/release/scout_streams.wasm
+COPY --from=wasm /usr/local/cargo /usr/local/cargo
+COPY --from=wasm /usr/local/rustup /usr/local/rustup
+RUN mkdir -p /app/substreams/vendor && curl --fail --location --retry 3 https://spkg.io/v1/packages/ethereum-common/v0.3.3 -o /app/substreams/vendor/ethereum-common.spkg && echo '67cfcb8f52a65611d80d2fd6ee951ecb77d848ddcbda0eb5aac839e880b1e020  /app/substreams/vendor/ethereum-common.spkg' | sha256sum -c -
+ENV NODE_ENV=production SUBSTREAMS_BIN=/usr/local/bin/substreams SUBSTREAMS_TEMPLATE_DIR=/app/substreams PORT=8080 CARGO_HOME=/usr/local/cargo RUSTUP_HOME=/usr/local/rustup PATH=/usr/local/cargo/bin:$PATH
+USER node
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s CMD node -e "fetch('http://127.0.0.1:8080/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+STOPSIGNAL SIGTERM
+CMD ["/app/apps/worker/node_modules/.bin/tsx", "/app/apps/worker/src/main.ts"]

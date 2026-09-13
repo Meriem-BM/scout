@@ -1,0 +1,80 @@
+name: Verify Scout
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  application:
+    name: Application, database, and browser
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Install pnpm
+        uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
+        with:
+          version: 11.25.0
+      - name: Install Node
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        env:
+          HUSKY: "0"
+        run: pnpm install --frozen-lockfile
+      - name: Check formatting, lint, types, and unit tests
+        run: pnpm check
+      - name: Install Rust toolchain
+        run: rustup toolchain install 1.98.1 --profile minimal --component rustfmt,clippy --target wasm32-unknown-unknown
+      - name: Check Rust and pipeline tests
+        run: pnpm format:check:rust && pnpm pipeline:lint && pnpm pipeline:test
+      - name: Start local Supabase
+        run: pnpm db:start
+      - name: Apply and verify migrations
+        run: pnpm db:migrate && pnpm db:types && git diff --exit-code packages/database/src/database.types.ts
+      - name: Test database workflows
+        run: pnpm test:db
+      - name: Test connection persistence
+        run: pnpm test:db:connections
+      - name: Test authentication boundaries
+        run: pnpm test:auth
+      - name: Configure isolated local web environment
+        run: pnpm setup:local
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Test browser journeys
+        run: pnpm test:e2e
+      - name: Build production web and worker
+        run: pnpm build
+      - name: Confirm credential-gated smoke is skipped honestly
+        run: pnpm test:live
+      - name: Upload browser evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: browser-verification
+          path: |
+            playwright-report/
+            docs/screenshots/
+          retention-days: 7
+      - name: Stop local Supabase
+        if: always()
+        run: pnpm db:stop
+  worker-image:
+    name: Worker image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Build worker image
+        run: docker build -f Dockerfile.worker -t scout-worker:ci .
+      - name: Verify bundled Substreams CLI
+        run: docker run --rm --entrypoint /usr/local/bin/substreams scout-worker:ci --version
