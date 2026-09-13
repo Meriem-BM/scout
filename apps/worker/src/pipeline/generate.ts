@@ -57,6 +57,39 @@ export async function trustedSourceHash(templateDir: string) {
   return sha256(Buffer.concat(contents));
 }
 
+export async function prebuiltTemplate(templateDir: string) {
+  let metadata: { sourceHash: string; wasmHash: string };
+
+  try {
+    metadata = JSON.parse(
+      await readFile(join(templateDir, "prebuilt.json"), "utf8"),
+    );
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return null;
+    }
+
+    throw error;
+  }
+
+  const bytes = await readFile(
+    join(
+      templateDir,
+      "target/wasm32-unknown-unknown/release/scout_streams.wasm",
+    ),
+  );
+
+  if (
+    metadata.sourceHash !== (await trustedSourceHash(templateDir)) ||
+    metadata.wasmHash !== sha256(bytes) ||
+    !bytes.subarray(0, 8).equals(Buffer.from([0, 97, 115, 109, 1, 0, 0, 0]))
+  ) {
+    throw new Error("Prebuilt monitoring template integrity check failed.");
+  }
+
+  return { bytes, wasmHash: metadata.wasmHash };
+}
+
 export async function packPipeline(
   spec: WatchSpec,
   templateDir: string,
@@ -94,17 +127,27 @@ export async function packPipeline(
     });
   }
 
-  const compileLog = await runControlled(
-    "cargo",
-    ["build", "--locked", "--release", "--target", "wasm32-unknown-unknown"],
-    directory,
-    240_000,
-  );
+  const prebuilt = await prebuiltTemplate(templateDir);
+  let compileLog: string;
 
-  await cp(
-    join(directory, "target/wasm32-unknown-unknown/release/scout_streams.wasm"),
-    join(directory, "scout_streams.wasm"),
-  );
+  if (prebuilt) {
+    await writeFile(join(directory, "scout_streams.wasm"), prebuilt.bytes);
+    compileLog = `Reused template compiled during the container build. Source and WASM integrity verified. WASM SHA-256: ${prebuilt.wasmHash}`;
+  } else {
+    compileLog = await runControlled(
+      "cargo",
+      ["build", "--locked", "--release", "--target", "wasm32-unknown-unknown"],
+      directory,
+      240_000,
+    );
+    await cp(
+      join(
+        directory,
+        "target/wasm32-unknown-unknown/release/scout_streams.wasm",
+      ),
+      join(directory, "scout_streams.wasm"),
+    );
+  }
 
   const packLog = await runControlled(
     cli,

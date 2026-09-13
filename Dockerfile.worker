@@ -35,10 +35,9 @@ WORKDIR /app
 COPY --from=dependencies --chown=node:node /app /app
 COPY --chown=node:node substreams/ /app/substreams/
 COPY --from=wasm --chown=node:node /build/target/wasm32-unknown-unknown/release/scout_streams.wasm /app/substreams/target/wasm32-unknown-unknown/release/scout_streams.wasm
-COPY --from=wasm /usr/local/cargo /usr/local/cargo
-COPY --from=wasm /usr/local/rustup /usr/local/rustup
+RUN /app/apps/worker/node_modules/.bin/tsx /app/apps/worker/src/pipeline/seal-template.ts /app/substreams
 RUN mkdir -p /app/substreams/vendor && curl --fail --location --retry 3 https://spkg.io/v1/packages/ethereum-common/v0.3.3 -o /app/substreams/vendor/ethereum-common.spkg && echo '67cfcb8f52a65611d80d2fd6ee951ecb77d848ddcbda0eb5aac839e880b1e020  /app/substreams/vendor/ethereum-common.spkg' | sha256sum -c -
-ENV NODE_ENV=production SUBSTREAMS_BIN=/usr/local/bin/substreams SUBSTREAMS_TEMPLATE_DIR=/app/substreams PORT=8080 CARGO_HOME=/usr/local/cargo RUSTUP_HOME=/usr/local/rustup PATH=/usr/local/cargo/bin:$PATH
+ENV NODE_ENV=production SUBSTREAMS_BIN=/usr/local/bin/substreams SUBSTREAMS_TEMPLATE_DIR=/app/substreams PORT=8080
 USER node
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s CMD node -e "fetch('http://127.0.0.1:8080/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"

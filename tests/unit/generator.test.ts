@@ -1,3 +1,7 @@
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { defaultSpec, POOLS, TOKENS } from "@scout/domain";
@@ -5,9 +9,57 @@ import { defaultSpec, POOLS, TOKENS } from "@scout/domain";
 import {
   manifest,
   pipelineIdentity,
+  prebuiltTemplate,
+  sha256,
+  trustedSourceHash,
 } from "../../apps/worker/src/pipeline/generate";
 
 describe("constrained reusable module composition", () => {
+  it("reuses sealed WASM only while its source and binary still match", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "scout-template-"));
+
+    try {
+      expect(await prebuiltTemplate(directory)).toBeNull();
+
+      for (const file of [
+        "src/lib.rs",
+        "proto/scout.proto",
+        "Cargo.lock",
+        "Cargo.toml",
+        "abi/pool.json",
+        "build.rs",
+        "rust-toolchain.toml",
+        "README.md",
+      ]) {
+        await mkdir(dirname(join(directory, file)), { recursive: true });
+        await writeFile(join(directory, file), file);
+      }
+
+      const binaryPath = join(
+        directory,
+        "target/wasm32-unknown-unknown/release/scout_streams.wasm",
+      );
+      const bytes = Buffer.from([0, 97, 115, 109, 1, 0, 0, 0]);
+
+      await mkdir(dirname(binaryPath), { recursive: true });
+      await writeFile(binaryPath, bytes);
+      await writeFile(
+        join(directory, "prebuilt.json"),
+        JSON.stringify({
+          sourceHash: await trustedSourceHash(directory),
+          wasmHash: sha256(bytes),
+        }),
+      );
+      expect((await prebuiltTemplate(directory))?.bytes).toEqual(bytes);
+      await writeFile(binaryPath, Buffer.concat([bytes, Buffer.from([1])]));
+      await expect(prebuiltTemplate(directory)).rejects.toThrow("integrity");
+      await writeFile(binaryPath, bytes);
+      await writeFile(join(directory, "src/lib.rs"), "modified decoder");
+      await expect(prebuiltTemplate(directory)).rejects.toThrow("integrity");
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
   it("emits a real indexed decoder and parameterized output", () => {
     const yaml = manifest(defaultSpec(), "23000000");
 
