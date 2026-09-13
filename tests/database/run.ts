@@ -20,6 +20,7 @@ import {
 import {
   DEFAULT_PROMPT,
   defaultSpec,
+  maxWindow,
   POOLS,
   ROUTERS,
   SnapshotSchema,
@@ -450,6 +451,10 @@ try {
   const events = fixtureEvents();
 
   assert(events[0] && events[1] && events[2]);
+  // Rolling rules need observation coverage from the window start, not the
+  // current block. Production sets this during pipeline warmup.
+  await sql`update public.pipeline_deployments set proof=${sql.json({ observationFromTime: events[2].timestamp - maxWindow(defaultSpec()) })} where id=${deploymentId}`;
+  deployment = await loadDeployment(sql, deploymentId);
   await persistBlock(
     sql,
     deployment,
@@ -487,11 +492,16 @@ try {
     true,
   );
 
-  const incidentId = z
-    .string()
-    .parse(
-      (await sql`select id from public.incidents where watch_id=${wid}`)[0]?.id,
-    );
+  const recorded =
+    await sql`select id from public.incidents where watch_id=${wid}`;
+
+  assert.equal(
+    recorded.length,
+    1,
+    "connection restart should restore the prior window and detect the third transaction",
+  );
+
+  const incidentId = z.string().parse(recorded[0]?.id);
 
   assert.equal(
     (await loadIncident(sql, incidentId)).detection.totalUsdMicros,

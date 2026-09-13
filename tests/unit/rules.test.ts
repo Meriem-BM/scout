@@ -78,6 +78,23 @@ describe("composable deterministic conditions", () => {
     expect(match?.totalUsdMicros).toBe("208000000000");
     expect(match?.evidenceIds).toHaveLength(3);
   });
+  it("does not match a rolling window until observation coverage includes the window start", () => {
+    const spec = defaultSpec();
+    const third = anchor();
+
+    expect(
+      evaluate(spec, third, events(), {
+        from: third.timestamp,
+        through: third.timestamp,
+      }),
+    ).toBeNull();
+    expect(
+      evaluate(spec, third, events(), {
+        from: third.timestamp - 900,
+        through: third.timestamp,
+      })?.totalUsdMicros,
+    ).toBe("208000000000");
+  });
   it("uses strict greater-than for USD, inclusive minimum for count", () => {
     const spec = defaultSpec();
 
