@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { cp, mkdir } from "node:fs/promises";
+import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -14,6 +14,21 @@ for (const entry of ["config.toml", "seed.sql", "migrations"]) {
   await cp(resolve("supabase", entry), join(stage, "supabase", entry), {
     recursive: true,
   });
+}
+
+// Database isolation tests need disposable Supabase identities. Enable their
+// login provider only in the staged CI configuration; Scout uses Privy.
+if (process.env.CI === "true" && process.env.SCOUT_TEST_EMAIL_AUTH === "1") {
+  const configPath = join(stage, "supabase", "config.toml");
+  const config = await readFile(configPath, "utf8");
+
+  await writeFile(
+    configPath,
+    config.replace(
+      "[auth.email]\nenable_signup = false",
+      "[auth.email]\nenable_signup = true",
+    ),
+  );
 }
 
 console.log(

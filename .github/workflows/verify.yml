@@ -42,6 +42,8 @@ jobs:
       - name: Check Rust and pipeline tests
         run: pnpm format:check:rust && pnpm pipeline:lint && pnpm pipeline:test
       - name: Start local Supabase
+        env:
+          SCOUT_TEST_EMAIL_AUTH: "1"
         run: pnpm db:start
       - name: Apply and verify migrations
         run: pnpm db:migrate && pnpm db:types && git diff --exit-code packages/database/src/database.types.ts
