@@ -1,0 +1,10 @@
+pnpm-lock.yaml
+packages/database/src/database.types.ts
+docs/THIRD_PARTY.json
+substreams/target/
+.scout/
+.next/
+dist/
+test-results/
+playwright-report/
+coverage/
