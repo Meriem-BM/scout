@@ -29,6 +29,7 @@ const Account = z.object({
 function SessionBridge({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { ready, authenticated, user, getAccessToken, logout } = usePrivy();
+  const accessTokenGetter = useRef(getAccessToken);
   const subject = authenticated ? (user?.id ?? null) : null;
   const activeSubject = useRef(subject);
   const [result, setResult] = useState<{
@@ -46,6 +47,9 @@ function SessionBridge({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     activeSubject.current = subject;
   }, [subject]);
+  useEffect(() => {
+    accessTokenGetter.current = getAccessToken;
+  }, [getAccessToken]);
   useEffect(
     () => () => {
       mounted.current = false;
@@ -143,7 +147,7 @@ function SessionBridge({ children }: { children: React.ReactNode }) {
     previous.current = subject;
 
     const cleanup = installAuthTransport(
-      ready && subject ? getAccessToken : async () => null,
+      ready && subject ? () => accessTokenGetter.current() : async () => null,
       () => {
         blocked.current = true;
         clearPrivateDrafts();
@@ -172,7 +176,7 @@ function SessionBridge({ children }: { children: React.ReactNode }) {
       canceled = true;
       cleanup();
     };
-  }, [ready, subject, getAccessToken, restore]);
+  }, [ready, subject, restore]);
 
   const { login: openLogin } = useLogin({
     onComplete: () => {

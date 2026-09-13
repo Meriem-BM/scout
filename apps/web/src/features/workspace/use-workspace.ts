@@ -27,6 +27,12 @@ export function useWorkspace(poll = false) {
   });
 
   const refresh = async () => {
+    if (auth.hasSession && !auth.account) {
+      await auth.restore();
+
+      return;
+    }
+
     await client.invalidateQueries({
       queryKey: queryKeys.snapshot(session.userId),
     });
