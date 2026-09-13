@@ -1,5 +1,5 @@
 import { protocolProfileForIntent } from "./protocols";
-import { POOLS } from "./uniswap-scope";
+import { canonicalUniswapTokenSymbol, POOLS, TOKENS } from "./uniswap-scope";
 
 import type { WatchIntentSpec } from "./workflow";
 
@@ -124,4 +124,97 @@ export function dataPlanningClarification(intent: WatchIntentSpec) {
   }
 
   return null;
+}
+
+/** Keep an exact choice from Scout's pool question binding across model retries.
+ * Arbitrary custom answers still go through normal resolution. A later request
+ * for all pools or different addresses cancels this bounded shortcut. */
+export function applyConfirmedPoolScope(
+  intent: WatchIntentSpec,
+  answers: Array<{ field: string; answer: string }>,
+) {
+  const index = answers.findLastIndex((a) => a.field === "poolScope");
+
+  if (
+    index < 0 ||
+    protocolProfileForIntent(intent).id !== "uniswap" ||
+    intent.activity.type.value !== "swap" ||
+    intent.subject.protocolVersion?.value
+      .toLowerCase()
+      .replace(/^uniswap[_ -]?/, "") !== "v3" ||
+    intent.subject.chain?.value !== "ethereum"
+  ) {
+    return false;
+  }
+
+  const question = dataPlanningClarification({
+    ...intent,
+    subject: {
+      ...intent.subject,
+      protocolVersion: { value: "v3", source: "explicit", confidence: 1 },
+      contracts: [],
+    },
+  });
+  const chosen = question?.choices.find(
+    (c) => c.value === answers[index]!.answer,
+  );
+
+  if (!chosen) {
+    return false;
+  }
+
+  intent.subject.protocolVersion!.value = "v3";
+
+  const addresses = chosen.value.match(/0x[0-9a-fA-F]{40}/g)!;
+  const later = answers
+    .slice(index + 1)
+    .filter((a) => /pool|scope|contract/i.test(a.field));
+
+  if (
+    later.some(
+      (a) =>
+        /\ball\b|\bevery\b/i.test(a.answer) ||
+        (a.answer.match(/0x[0-9a-fA-F]{40}/g) ?? []).some(
+          (address) => !addresses.includes(address.toLowerCase()),
+        ),
+    )
+  ) {
+    return false;
+  }
+
+  intent.subject.contracts = addresses.map((value) => ({
+    value,
+    source: "explicit",
+    confidence: 1,
+  }));
+
+  // These pool addresses bind the pair through the installed catalog.
+  // Resolve omitted pair metadata without changing an explicitly different token.
+  if (
+    intent.subject.tokens.every((token) =>
+      TOKENS.some(
+        (known) => known.symbol === canonicalUniswapTokenSymbol(token.value),
+      ),
+    )
+  ) {
+    intent.subject.tokens = TOKENS.map((token) => ({
+      value: token.symbol,
+      source: "resolved",
+      confidence: 1,
+    }));
+  }
+
+  const scopeFields = new Set([
+    "poolScope",
+    "pool_scope",
+    "pools",
+    "contracts",
+    "subject.contracts",
+  ]);
+
+  intent.unresolved = intent.unresolved.filter(
+    (field) => !scopeFields.has(field.field),
+  );
+
+  return true;
 }
