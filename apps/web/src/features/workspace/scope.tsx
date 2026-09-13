@@ -8,11 +8,12 @@ import {
   CircleDollarSign,
   Database,
   Send,
-  ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 
 import { buttonClassName } from "@/features/workspace/primitives";
+
+import { CapabilityCatalog } from "../capabilities/catalog";
 
 import { Modal } from "./ui";
 import { useWorkspace } from "./use-workspace";
@@ -134,71 +135,5 @@ export function Sources({ trigger }: { trigger?: React.ReactNode } = {}) {
 }
 
 export function ScopeNote() {
-  return (
-    <div className="scope-note">
-      <div className="scope-note-primary">
-        <span className="scope-note-icon">
-          <Activity width={19} height={19} />
-        </span>
-        <div>
-          <h3>Supported monitoring setups</h3>
-          <p>
-            Start with an available setup. Each Watch must pass source and
-            execution checks before monitoring begins.
-          </p>
-        </div>
-      </div>
-      <div className="scope-note-list">
-        <div className="scope-note-row">
-          <TokenPair />
-          <div>
-            <h3>Uniswap V3 · Ethereum</h3>
-            <p>ETH/USDC swaps and volume rules in the 0.05% and 0.30% pools.</p>
-          </div>
-        </div>
-        <div className="scope-note-row">
-          <span className="scope-note-secondary-icon">
-            <Database width={16} height={16} />
-          </span>
-          <div>
-            <h3>USDC transfers · Base</h3>
-            <p>
-              Native USDC transfer thresholds using nominal dollar value, across
-              all wallets.
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className="scope-note-list">
-        <div className="scope-note-row">
-          <span className="scope-note-secondary-icon">
-            <Activity width={16} height={16} />
-          </span>
-          <div>
-            <h3>Uniswap V4 · Ethereum</h3>
-            <p>
-              Liquidity increases or removals, across all pools or a specified
-              pool ID. Dollar-value thresholds are not supported.
-            </p>
-          </div>
-        </div>
-        <div className="scope-note-row">
-          <span className="scope-note-secondary-icon">
-            <ShieldCheck width={16} height={16} />
-          </span>
-          <div>
-            <h3>Other requests</h3>
-            <p>
-              Scout checks compatibility before setup. It explains missing
-              capabilities and keeps your requested conditions unchanged.
-            </p>
-          </div>
-        </div>
-      </div>
-      <p className="scope-note-assurance">
-        <ShieldCheck width={15} height={15} /> No Watch is marked live without
-        real execution and semantic checks
-      </p>
-    </div>
-  );
+  return <CapabilityCatalog compact />;
 }

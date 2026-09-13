@@ -9,14 +9,13 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 
-import {
-  type Watch,
-  WATCH_STARTERS,
-  workflowPresentation,
-} from "@scout/domain";
+import { type Watch, workflowPresentation } from "@scout/domain";
 
+import { useCapabilities } from "../capabilities/queries";
+import { WatchCapabilityExplanation } from "../capabilities/watch-explanation";
 import { useDateTime } from "../workspace/formatting";
 import { buttonClassName } from "../workspace/primitives";
+import { ProtocolMark } from "../workspace/protocol-mark";
 import { WorkflowSkeleton } from "../workspace/skeletons";
 import { Busy, ErrorNotice } from "../workspace/ui";
 
@@ -61,6 +60,7 @@ function stageLabel(stage: string) {
 
 export function WatchCreationWorkflow({ watch }: { watch: Watch }) {
   const dateTime = useDateTime();
+  const capabilities = useCapabilities();
   const [custom, setCustom] = useState("");
   const {
     query,
@@ -75,7 +75,9 @@ export function WatchCreationWorkflow({ watch }: { watch: Watch }) {
 
   const presentation = workflow ? workflowPresentation(workflow) : null;
   const prompt = workflow?.originalPrompt ?? watch.prompt;
-  const starter = WATCH_STARTERS.find((item) => item.prompt === prompt.trim());
+  const starter = capabilities.data?.examples.find(
+    (item) => item.prompt === prompt.trim(),
+  );
 
   return (
     <div className="workflow-page">
@@ -84,7 +86,17 @@ export function WatchCreationWorkflow({ watch }: { watch: Watch }) {
       </Link>
       <header className="workflow-header">
         <div>
-          <h1>{starter?.label ?? prompt}</h1>
+          <h1>
+            <ProtocolMark
+              protocol={
+                starter?.adapterId ??
+                watch.spec?.protocol ??
+                watch.intent?.subject.protocol?.value
+              }
+              size={28}
+            />
+            <span>{starter?.label ?? prompt}</span>
+          </h1>
           {starter && <p>{starter.description}</p>}
         </div>
         <div
@@ -105,6 +117,7 @@ export function WatchCreationWorkflow({ watch }: { watch: Watch }) {
       ) : (
         <div className="workflow-layout">
           <div className="workflow-timeline">
+            <WatchCapabilityExplanation workflow={workflow} />
             <WorkflowOutcome
               workflow={workflow}
               retrying={retrying}
@@ -238,135 +251,142 @@ export function WatchCreationWorkflow({ watch }: { watch: Watch }) {
           </div>
 
           <aside className="workflow-proof">
-            <h2>Saved setup details</h2>
-            {starter && (
-              <details className="workflow-request">
-                <summary>Full request</summary>
-                <p>{prompt}</p>
-              </details>
-            )}
-            <p className="workflow-proof-note">
-              Plans describe intended work. Check the verification report for
-              execution evidence.
-            </p>
-            <ProofBlock
-              title="Intent"
-              value={
-                workflow.outputs.intent
-                  ? {
-                      network: workflow.outputs.intent.subject.chain?.value,
-                      protocol: workflow.outputs.intent.subject.protocol?.value,
-                      version:
-                        workflow.outputs.intent.subject.protocolVersion?.value,
-                      tokens: workflow.outputs.intent.subject.tokens
-                        .map((item) => item.value)
-                        .join(" / "),
-                      activity: workflow.outputs.intent.activity.type.value,
-                      pools: workflow.outputs.intent.subject.contracts.map(
-                        (item) => item.value,
-                      ),
-                      conditions: workflow.outputs.intent.filters.map(
-                        (filter) =>
-                          `${filter.field} ${filter.operator} ${filter.value} ${filter.unit ?? ""}`,
-                      ),
-                      assumptions: workflow.outputs.intent.assumptions,
-                    }
-                  : null
-              }
-            />
-            <ProofBlock
-              title="Data plan"
-              value={
-                workflow.outputs.dataRequirements
-                  ? {
-                      stream: workflow.outputs.dataRequirements.requiredStreams
-                        .map((item) =>
-                          [item.protocol, item.entity]
-                            .filter(Boolean)
-                            .join(" "),
-                        )
-                        .join(", "),
-                      profile:
-                        workflow.outputs.dataRequirements.protocolProfile,
-                      deterministic:
-                        workflow.outputs.dataRequirements
-                          .deterministicDerivedFields,
-                      historical:
-                        workflow.outputs.dataRequirements.historicalQueries,
-                    }
-                  : null
-              }
-            />
-            <ProofBlock
-              title="Data source"
-              value={
-                workflow.outputs.packageResolution
-                  ? {
-                      selected: workflow.outputs.packageResolution.selectedRef,
-                      strategy: workflow.outputs.packageResolution.strategy,
-                      inspected:
-                        workflow.outputs.packageResolution.candidates.length,
-                      considered:
-                        workflow.outputs.packageResolution.alternatives.map(
-                          (item) => item.ref,
+            <details>
+              <summary>Pipeline & verification</summary>
+              {starter && (
+                <details className="workflow-request">
+                  <summary>Full request</summary>
+                  <p>{prompt}</p>
+                </details>
+              )}
+              <p className="workflow-proof-note">
+                Plans describe intended work. Check the verification report for
+                execution evidence.
+              </p>
+              <ProofBlock
+                title="Intent"
+                value={
+                  workflow.outputs.intent
+                    ? {
+                        network: workflow.outputs.intent.subject.chain?.value,
+                        protocol:
+                          workflow.outputs.intent.subject.protocol?.value,
+                        version:
+                          workflow.outputs.intent.subject.protocolVersion
+                            ?.value,
+                        tokens: workflow.outputs.intent.subject.tokens
+                          .map((item) => item.value)
+                          .join(" / "),
+                        activity: workflow.outputs.intent.activity.type.value,
+                        pools: workflow.outputs.intent.subject.contracts.map(
+                          (item) => item.value,
                         ),
-                    }
-                  : null
-              }
-            />
-            <ProofBlock
-              title="Architecture"
-              value={
-                workflow.outputs.pipelinePlan
-                  ? {
-                      strategy: workflow.outputs.pipelinePlan.strategy,
-                      protocol: [
-                        workflow.outputs.pipelinePlan.protocol.name,
-                        workflow.outputs.pipelinePlan.protocol.version,
-                      ]
-                        .filter(Boolean)
-                        .join(" "),
-                      activity:
-                        workflow.outputs.pipelinePlan.protocol.activity.replaceAll(
-                          "_",
-                          " ",
+                        conditions: workflow.outputs.intent.filters.map(
+                          (filter) =>
+                            `${filter.field} ${filter.operator} ${filter.value} ${filter.unit ?? ""}`,
                         ),
-                      execution:
-                        workflow.outputs.pipelinePlan.execution.status ===
-                        "verified"
-                          ? "Executor available; see verification"
-                          : "Planning only",
-                      package:
-                        workflow.outputs.pipelinePlan.dependencies[0]
-                          ?.packageRef,
-                      reused: workflow.outputs.pipelinePlan.dependencies.map(
-                        (item) => item.module,
-                      ),
-                      scoutModules: workflow.outputs.pipelinePlan
-                        .generatedModules.length
-                        ? workflow.outputs.pipelinePlan.generatedModules.map(
-                            (item) => item.name,
-                          )
-                        : ["None"],
-                    }
-                  : null
-              }
-            />
-            <ProofBlock
-              title="Verification"
-              value={
-                workflow.outputs.verification
-                  ? {
-                      status: workflow.outputs.verification.status,
-                      blocks:
-                        workflow.outputs.verification.execution.blocksTested,
-                      events:
-                        workflow.outputs.verification.execution.eventsObserved,
-                      source: workflow.outputs.verification.referenceSource,
-                    }
-                  : null
-              }
-            />
+                        assumptions: workflow.outputs.intent.assumptions,
+                      }
+                    : null
+                }
+              />
+              <ProofBlock
+                title="Data plan"
+                value={
+                  workflow.outputs.dataRequirements
+                    ? {
+                        stream:
+                          workflow.outputs.dataRequirements.requiredStreams
+                            .map((item) =>
+                              [item.protocol, item.entity]
+                                .filter(Boolean)
+                                .join(" "),
+                            )
+                            .join(", "),
+                        profile:
+                          workflow.outputs.dataRequirements.protocolProfile,
+                        deterministic:
+                          workflow.outputs.dataRequirements
+                            .deterministicDerivedFields,
+                        historical:
+                          workflow.outputs.dataRequirements.historicalQueries,
+                      }
+                    : null
+                }
+              />
+              <ProofBlock
+                title="Data source"
+                value={
+                  workflow.outputs.packageResolution
+                    ? {
+                        selected:
+                          workflow.outputs.packageResolution.selectedRef,
+                        strategy: workflow.outputs.packageResolution.strategy,
+                        inspected:
+                          workflow.outputs.packageResolution.candidates.length,
+                        considered:
+                          workflow.outputs.packageResolution.alternatives.map(
+                            (item) => item.ref,
+                          ),
+                      }
+                    : null
+                }
+              />
+              <ProofBlock
+                title="Architecture"
+                value={
+                  workflow.outputs.pipelinePlan
+                    ? {
+                        strategy: workflow.outputs.pipelinePlan.strategy,
+                        protocol: [
+                          workflow.outputs.pipelinePlan.protocol.name,
+                          workflow.outputs.pipelinePlan.protocol.version,
+                        ]
+                          .filter(Boolean)
+                          .join(" "),
+                        activity:
+                          workflow.outputs.pipelinePlan.protocol.activity.replaceAll(
+                            "_",
+                            " ",
+                          ),
+                        execution:
+                          workflow.outputs.pipelinePlan.execution.status ===
+                          "verified"
+                            ? "Executor available; see verification"
+                            : "Planning only",
+                        package:
+                          workflow.outputs.pipelinePlan.dependencies[0]
+                            ?.packageRef,
+                        reused: workflow.outputs.pipelinePlan.dependencies.map(
+                          (item) => item.module,
+                        ),
+                        scoutModules: workflow.outputs.pipelinePlan
+                          .generatedModules.length
+                          ? workflow.outputs.pipelinePlan.generatedModules.map(
+                              (item) => item.name,
+                            )
+                          : ["None"],
+                      }
+                    : null
+                }
+              />
+              <ProofBlock
+                title="Verification"
+                value={
+                  workflow.outputs.verification
+                    ? {
+                        status: workflow.outputs.verification.status,
+                        blocks:
+                          workflow.outputs.verification.execution.blocksTested,
+                        events:
+                          workflow.outputs.verification.execution
+                            .eventsObserved,
+                        source: workflow.outputs.verification.referenceSource,
+                      }
+                    : null
+                }
+              />
+            </details>
           </aside>
         </div>
       )}

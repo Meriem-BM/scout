@@ -1,11 +1,11 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
 import {
   ArrowUp as ArrowUpIcon,
   ArrowUpRight as ArrowUpRightIcon,
   Radio as SignalIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   useCallback,
@@ -15,13 +15,11 @@ import {
   useState,
 } from "react";
 
-import { WATCH_STARTERS } from "@scout/domain";
-import { SketchArrow } from "@/components/ui/sketch-arrow";
-
 import { useScoutAuth } from "../account/auth-context";
-import { ScopeNote } from "../workspace/scope";
+import { useCapabilities } from "../capabilities/queries";
+import { ProtocolMark } from "../workspace/protocol-mark";
 import { ScoutMark } from "../workspace/scout-mark";
-import { ErrorNotice, Modal } from "../workspace/ui";
+import { ErrorNotice } from "../workspace/ui";
 import { useWorkspace } from "../workspace/use-workspace";
 
 import { setDraft, useDraft } from "./draft";
@@ -29,6 +27,7 @@ import { useCreateWatch } from "./mutations";
 
 export function WatchComposer() {
   const draft = useDraft();
+  const capabilities = useCapabilities();
   const promptRef = useRef<HTMLTextAreaElement>(null);
   const { signedIn } = useWorkspace();
   const auth = useScoutAuth();
@@ -37,6 +36,18 @@ export function WatchComposer() {
   const { mutateAsync: createWatch, isPending: busy } = useCreateWatch();
   const [error, setError] = useState<string | null>(null);
   const resumed = useRef(false);
+  const selectedExample = params.get("example");
+
+  useEffect(() => {
+    const example = capabilities.data?.examples.find(
+      (item) => item.id === selectedExample,
+    );
+
+    if (example) {
+      setDraft(example.prompt);
+    }
+  }, [selectedExample, capabilities.data]);
+
   const submit = useCallback(async () => {
     const prompt = draft.trim();
 
@@ -99,8 +110,8 @@ export function WatchComposer() {
         <ScoutMark className="watch-intro-mark" />
         <h1 id="composer-heading">Describe what matters onchain.</h1>
         <p>
-          Start with a supported setup or describe your own signal. Scout checks
-          what it can monitor before preparing and verifying the pipeline.
+          Scout turns your request into a verified live monitor using the
+          blockchain data it knows how to access.
         </p>
       </div>
       <form
@@ -130,23 +141,9 @@ export function WatchComposer() {
           }}
         />
         <div className="composer-bottom">
-          <Modal
-            title="How Scout plans a monitor"
-            description="See the networks, activities, and thresholds Scout can currently monitor."
-            trigger={
-              <button
-                type="button"
-                className="scope-chip"
-                aria-label="View monitoring capabilities"
-              >
-                <SignalIcon />
-                Supported networks <span>· Ethereum & Base</span>
-                <ChevronDown className="size-4" aria-hidden="true" />
-              </button>
-            }
-          >
-            <ScopeNote />
-          </Modal>
+          <Link className="scope-chip" href="/capabilities">
+            <SignalIcon /> What can Scout watch? →
+          </Link>
           <div className="composer-submit-group">
             <span className="composer-shortcut" aria-hidden="true">
               ⌘ / Ctrl + Enter
@@ -171,30 +168,38 @@ export function WatchComposer() {
         </div>
       </form>
       <p className="composer-capabilities">
-        Check support <SketchArrow /> Prepare data <SketchArrow /> Verify{" "}
-        <SketchArrow /> Start monitoring
+        Scout checks whether it has the data and monitoring tools needed before
+        building the Watch.
       </p>
       <ErrorNotice message={error} />
       <div className="composer-examples">
-        <span className="composer-example-label">
-          Ready-to-configure examples
-        </span>
+        <span className="composer-example-label">Try an available setup</span>
         <div className="example-row">
-          {WATCH_STARTERS.map((starter) => (
-            <button
-              key={starter.id}
-              onClick={() => {
-                setDraft(starter.prompt);
-                document.getElementById("watch-prompt")?.focus();
-              }}
-            >
-              <span>
-                {starter.label}
-                <small>{starter.description}</small>
-              </span>
-              <ArrowUpRightIcon aria-hidden="true" />
-            </button>
-          ))}
+          {(capabilities.data?.examples ?? []).map((starter) => {
+            const protocol = capabilities.data?.protocols.find(
+              (entry) => entry.id === starter.adapterId,
+            )?.protocol;
+
+            return (
+              <button
+                key={starter.id}
+                onClick={() => {
+                  setDraft(starter.prompt);
+                  document.getElementById("watch-prompt")?.focus();
+                }}
+              >
+                <ProtocolMark
+                  protocol={protocol ?? starter.adapterId}
+                  size={20}
+                />
+                <span>
+                  {starter.label}
+                  <small>{starter.description}</small>
+                </span>
+                <ArrowUpRightIcon aria-hidden="true" />
+              </button>
+            );
+          })}
         </div>
         <p className="composer-draft-note">
           Examples use supported monitoring rules. Live activation still

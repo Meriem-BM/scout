@@ -3,14 +3,12 @@
 import { Play } from "lucide-react";
 import Link from "next/link";
 
-import {
-  WATCH_STARTERS,
-  type WatchWorkflow,
-  workflowPresentation,
-} from "@scout/domain";
+import { type WatchWorkflow, workflowPresentation } from "@scout/domain";
 
+import { useCapabilities } from "../capabilities/queries";
 import { setDraft } from "../watches/draft";
 import { buttonClassName } from "../workspace/primitives";
+import { ProtocolMark } from "../workspace/protocol-mark";
 import { Busy } from "../workspace/ui";
 
 export function WorkflowOutcome({
@@ -23,11 +21,8 @@ export function WorkflowOutcome({
   retry: () => void;
 }) {
   const presentation = workflowPresentation(workflow);
-  const alternatives = workflow.outputs.intent?.activity.type.value.startsWith(
-    "liquidity_",
-  )
-    ? [WATCH_STARTERS[2], WATCH_STARTERS[0], WATCH_STARTERS[1]]
-    : WATCH_STARTERS.slice(0, 3);
+  const capabilities = useCapabilities();
+  const alternatives = capabilities.data?.examples ?? [];
 
   return (
     <section
@@ -41,6 +36,16 @@ export function WorkflowOutcome({
       <h2>{presentation.title}</h2>
       <p>{presentation.message}</p>
       <p className="workflow-summary-note">{presentation.note}</p>
+      {workflow.errorCode && (
+        <details>
+          <summary>View technical details</summary>
+          <pre>
+            {workflow.errorCode}
+            {"\n"}
+            {workflow.errorMessage}
+          </pre>
+        </details>
+      )}
       {workflow.state === "FAILED" && (
         <div className="workflow-recovery">
           <div className="workflow-recovery-actions">
@@ -76,16 +81,28 @@ export function WorkflowOutcome({
                 before submitting.
               </p>
               <div className="workflow-alternatives">
-                {alternatives.map((starter) => (
-                  <Link
-                    key={starter.id}
-                    href="/watches"
-                    onClick={() => setDraft(starter.prompt)}
-                  >
-                    <span>{starter.label}</span>
-                    <small>{starter.description}</small>
-                  </Link>
-                ))}
+                {alternatives.map((starter) => {
+                  const protocol = capabilities.data?.protocols.find(
+                    (entry) => entry.id === starter.adapterId,
+                  )?.protocol;
+
+                  return (
+                    <Link
+                      key={starter.id}
+                      href="/watches"
+                      onClick={() => setDraft(starter.prompt)}
+                    >
+                      <ProtocolMark
+                        protocol={protocol ?? starter.adapterId}
+                        size={18}
+                      />
+                      <span>
+                        {starter.label}
+                        <small>{starter.description}</small>
+                      </span>
+                    </Link>
+                  );
+                })}
               </div>
             </>
           )}

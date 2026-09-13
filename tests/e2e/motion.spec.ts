@@ -1,37 +1,27 @@
 import { expect, test } from "@playwright/test";
 
-test("reduced motion preserves dialog focus and disables transitions", async ({
-  page,
-}) => {
+test("capability navigation respects reduced motion", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/watches");
+  await page.getByRole("link", { name: "What can Scout watch? →" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Start with what’s available." }),
+  ).toBeVisible();
 
-  const trigger = page.getByRole("button", {
-    name: "View monitoring capabilities",
-  });
+  const link = page.getByRole("link", { name: "Understand capabilities →" });
 
-  await trigger.click();
+  await link.focus();
+  await expect(link).toBeFocused();
 
-  const dialog = page.getByRole("dialog");
-
-  await expect(dialog).toBeVisible();
-
-  const motion = await dialog.evaluate((element) => {
-    const style = getComputedStyle(element);
-
-    return {
-      animation: style.animationName,
-      transition: style.transitionDuration,
-    };
-  });
+  const motion = await link.evaluate((element) => ({
+    animation: getComputedStyle(element).animationName,
+    transition: getComputedStyle(element).transitionDuration,
+  }));
 
   expect(motion).toEqual({ animation: "none", transition: "0s" });
-  await page.keyboard.press("Escape");
-  await expect(dialog).toBeHidden();
-  await expect(trigger).toBeFocused();
 });
 
-test("closing a dialog preserves the draft and scroll position", async ({
+test("exploring capabilities preserves an unfinished request", async ({
   page,
 }) => {
   await page.goto("/watches");
@@ -41,19 +31,10 @@ test("closing a dialog preserves the draft and scroll position", async ({
   );
 
   await draft.fill("Watch USDC transfers above $500K on Base.");
-
-  const trigger = page.getByRole("button", {
-    name: "View monitoring capabilities",
-  });
-
-  await trigger.scrollIntoViewIfNeeded();
-
-  const scroll = await page.evaluate(() => window.scrollY);
-
-  await trigger.click();
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toBeHidden();
+  await page.getByRole("link", { name: "What can Scout watch? →" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Start with what’s available." }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "← Your Watches" }).click();
   await expect(draft).toHaveValue("Watch USDC transfers above $500K on Base.");
-  expect(await page.evaluate(() => window.scrollY)).toBe(scroll);
 });

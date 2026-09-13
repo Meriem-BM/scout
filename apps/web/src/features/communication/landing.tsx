@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-import { Flow, GraphArchitecture } from "@/features/communication/flow";
+import { CapabilityCatalog } from "@/features/capabilities/catalog";
+import { Flow } from "@/features/communication/flow";
 import { IntentPreview } from "@/features/communication/intent-preview";
 import { buttonClassName } from "@/features/workspace/primitives";
 
@@ -13,138 +14,107 @@ export function LandingScreen() {
             Tell Scout what <em>matters onchain.</em>
           </h1>
           <p>
-            Scout turns monitoring intent into verified onchain infrastructure.
-            Describe the signal; Scout resolves the data pipeline, tests it on
-            real history, and keeps monitoring the live chain.
+            Scout turns natural-language monitoring requests into verified live
+            Watches. It checks what blockchain data is available, builds the
+            monitoring logic, and only activates when the Watch can actually
+            run.
           </p>
           <div className="public-actions">
             <Link className={buttonClassName("primary")} href="/watches">
               Build a Watch
             </Link>
-            <Link
-              className={buttonClassName("quiet")}
-              href="/docs/how-it-works"
-            >
-              See how it works →
+            <Link className={buttonClassName("quiet")} href="/capabilities">
+              See what Scout can monitor →
             </Link>
           </div>
         </div>
         <IntentPreview />
-        <p className="support-note hero-scope">
-          Live today: verified Uniswap V3 ETH/USDC monitoring on Ethereum. Other
-          intents use the same planning flow and stop safely when execution is
-          not yet supported.
-        </p>
-      </section>
-      <section className="story-section story-question" id="how-it-works">
-        <h2>Onchain monitoring shouldn’t start with infrastructure.</h2>
-        <p>
-          Every new signal normally means finding contracts, decoding events,
-          building indexers, backfilling history, and maintaining another
-          service. Scout starts with what you want to know.
-        </p>
       </section>
       <section className="story-section">
-        <h2>History first. Live immediately after.</h2>
-        <p>
-          Substreams can process historical block ranges in parallel, then
-          continue into a live stream. Scout uses historical execution to test
-          its pipeline before activation and a durable cursor to continue toward
-          chain head.
-        </p>
-        <figure className="parallel-explanation">
-          <figcaption>
-            How Substreams processes history · conceptual view
-          </figcaption>
-          <div className="parallel-ranges">
-            {["Range A", "Range B", "Range C", "Range D"].map((range) => (
-              <span key={range}>
-                <span>{range}</span>
-                <i aria-hidden="true">
-                  <b />
-                  <b />
-                  <b />
-                  <b />
-                  <b />
-                </i>
-              </span>
-            ))}
-          </div>
-          <p>Historical ranges processed in parallel</p>
-          <Flow
-            label="History to live stream"
-            steps={[
-              "Historical output",
-              "Catch up to chain head",
-              "Live blocks",
-            ]}
-          />
-        </figure>
+        <header className="story-copy">
+          <h2>What can Scout watch today?</h2>
+          <p>
+            Start with an available data source. Scout checks the exact chain,
+            activity and conditions before building your Watch.
+          </p>
+        </header>
+        <CapabilityCatalog compact />
+      </section>
+      <section className="story-section">
+        <header className="story-copy">
+          <h2>Your request. Checked before it goes live.</h2>
+          <p>
+            Scout understands what you want to watch, checks whether the
+            required data is available, builds the monitoring logic, verifies
+            it, and only then activates the Watch.
+          </p>
+        </header>
+        <Flow
+          label="From your request to a Watch"
+          steps={[
+            "Describe it",
+            "Check data and tools",
+            "Ask if something is missing",
+            "Build and verify",
+            "Monitor live",
+          ]}
+        />
+      </section>
+      <section className="story-section">
+        <header className="story-copy">
+          <h2>Mix conditions to describe what matters.</h2>
+          <p>
+            A request can combine an activity, a direction, an amount, a time
+            window and wallet history. Scout checks each part, then checks
+            whether the whole combination can run.
+          </p>
+        </header>
+        <Flow
+          label="How conditions combine"
+          steps={[
+            "Onchain activity",
+            "+ Your filters",
+            "+ Time or history",
+            "A Watch, when verified",
+          ]}
+        />
         <p className="support-note">
-          Parallel execution is a Substreams capability. Scout shows measured
-          progress only when the provider supplies it; historical testing is not
-          proof of a complete wallet-history baseline.
+          Some combinations are still being built. Scout explains the missing
+          part and keeps your request unchanged.
         </p>
+        <Link href="/docs/capabilities">Explore the monitoring tools →</Link>
       </section>
       <section className="story-section">
-        <h2>One prompt. The right pipeline.</h2>
-        <p>
-          Scout first checks whether someone has already built the data pipeline
-          it needs. It inspects packages, plans reuse or composition, tests the
-          executable pipeline against real blocks, and blocks activation if
-          verification fails.
+        <header className="story-copy">
+          <h2>
+            Protocols provide data.
+            <br />
+            Scout provides the monitoring logic.
+          </h2>
+          <p>
+            Scout is not built as one monitor per protocol. New protocols can be
+            added as data sources without rebuilding the Watch system.
+          </p>
+        </header>
+        <Flow
+          label="How Scout grows"
+          steps={[
+            "Installed data sources",
+            "Scout monitoring engine",
+            "Your Watches",
+          ]}
+        />
+        <p className="support-note">
+          More data sources can be added through Scout adapters. A protocol is
+          only available when it appears in Scout’s capability list.
         </p>
-        <div className="strategy-collection">
-          {[
-            [
-              "Reuse",
-              "Start with what exists.",
-              "Scout checks existing packages before adding code.",
-            ],
-            [
-              "Compose",
-              "Fill the missing pieces.",
-              "Connect useful outputs with only the normalization needed.",
-            ],
-            [
-              "Verify",
-              "Make correctness the gate.",
-              "Compare pipeline output with independent chain history.",
-            ],
-          ].map(([name, title, description], index) => (
-            <article key={name}>
-              <span className="strategy-order" aria-hidden="true">
-                0{index + 1}
-              </span>
-              <h3>{name}</h3>
-              <p>
-                <strong>{title}</strong>
-                {description}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
-      <section className="story-section">
-        <h2>Why The Graph is load-bearing</h2>
-        <p>
-          Substreams supplies the historical and live blockchain pipeline.
-          Subgraph queries provide wallet and pool context after a qualifying
-          event. Scout compares evidence with your conditions and decides
-          whether to alert or suppress.
-        </p>
-        <GraphArchitecture />
       </section>
       <footer className="landing-footer" aria-label="Scout">
-        <a
-          className="landing-footer-name"
-          href="#top"
-          aria-label="Scout, back to top"
-        >
+        <a className="landing-footer-name" href="#top">
           Scout
         </a>
         <nav aria-label="Explore Scout">
-          <Link href="/docs/how-it-works">How it works</Link>
+          <Link href="/capabilities">Capabilities</Link>
           <Link href="/docs">Docs</Link>
           <Link href="/watches">Launch app</Link>
         </nav>

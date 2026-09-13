@@ -11,7 +11,9 @@ import Link from "next/link";
 import {
   poolByAddress,
   protocolLabel,
+  protocolName,
   protocolProfileForIntent,
+  unavailableIntentCapability,
   usd,
   watchHealth,
 } from "@scout/domain";
@@ -19,6 +21,7 @@ import {
 import { ConnectionPopover } from "../connections/connections";
 import { useClock } from "../workspace/clock";
 import { useDateTime } from "../workspace/formatting";
+import { ProtocolMark } from "../workspace/protocol-mark";
 import { TokenPair } from "../workspace/scope";
 import { Status } from "../workspace/ui";
 import { useWorkspace } from "../workspace/use-workspace";
@@ -70,6 +73,12 @@ function Activity({
           {context.subject}
         </span>
         <span>
+          <ProtocolMark
+            protocol={
+              watch.spec?.protocol ?? watch.intent?.subject.protocol?.value
+            }
+            size={18}
+          />
           {latest
             ? `Uniswap V3 · ${poolByAddress(latest.detection.pool).feeLabel}`
             : context.scope}
@@ -131,7 +140,14 @@ function Activity({
                         ? "Watch archived"
                         : watch.status === "failed"
                           ? "Preparation needs attention"
-                          : "Listening for a match"}
+                          : [
+                                "watching",
+                                "live",
+                                "delayed",
+                                "degraded",
+                              ].includes(watch.status)
+                            ? "Listening for a match"
+                            : "Monitoring has not started"}
               </strong>
               <p>
                 {watch.lastBlock
@@ -196,8 +212,10 @@ function watchContext(watch: Watch) {
       scope: `${
         watch.intent.subject.protocol?.value
           ? [
-              watch.intent.subject.protocol.value,
-              watch.intent.subject.protocolVersion?.value,
+              protocolName(watch.intent.subject.protocol.value),
+              watch.intent.subject.protocolVersion?.value
+                .replace(/^uniswap[_ -]?/i, "")
+                .toUpperCase(),
             ]
               .filter(Boolean)
               .join(" ")
@@ -303,7 +321,13 @@ export function WatchCard({
         </div>
         {(health.needsAttention || health.muted) && (
           <p className="card-notice">
-            {watch.error ??
+            {(watch.intent &&
+              unavailableIntentCapability(watch.intent)?.message) ??
+              (watch.error
+                ? watch.status === "failed"
+                  ? "Scout could not complete this Watch. Open details for the missing condition or next step."
+                  : "Monitoring needs attention. Open details for the current connection and recovery status."
+                : null) ??
               (health.data === "Delayed"
                 ? `Data delayed. Last received ${watch.lastBlockTime ? dateTime(watch.lastBlockTime) : "not yet"}. Check watch health.`
                 : health.muted

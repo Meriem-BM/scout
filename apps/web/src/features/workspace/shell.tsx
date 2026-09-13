@@ -21,7 +21,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const auth = useScoutAuth();
   const isPublic =
-    path === "/" || path === "/docs" || path.startsWith("/docs/");
+    path === "/" ||
+    path === "/capabilities" ||
+    path === "/docs" ||
+    path.startsWith("/docs/");
   const isWatchesHome = path === "/watches";
 
   return (

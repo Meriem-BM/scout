@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 
-import { CollectionWatchSchema, EXAMPLES, watchHealth } from "@scout/domain";
+import { CollectionWatchSchema, watchHealth } from "@scout/domain";
 import { queryKeys } from "@/lib/query/keys";
 
 import { api } from "../workspace/api";
@@ -18,7 +18,6 @@ import { ErrorNotice } from "../workspace/ui";
 import { useWorkspace } from "../workspace/use-workspace";
 
 import { WatchComposer } from "./composer";
-import { setDraft } from "./draft";
 import { WatchCard } from "./watch-card";
 
 import type { Incident } from "@scout/domain";
@@ -233,7 +232,7 @@ export function Watches() {
               <p>
                 {search || filter !== "all"
                   ? "Try another search or status. Archived watches keep their history."
-                  : "Describe something you care about onchain. Scout will resolve the data pipeline and verify it before monitoring begins."}
+                  : "Describe something you care about onchain. Scout will check what data is available and verify the Watch before monitoring begins."}
               </p>
             </div>
             {!search && filter === "all" && (
@@ -241,7 +240,6 @@ export function Watches() {
                 <button
                   className={buttonClassName("primary")}
                   onClick={() => {
-                    setDraft(EXAMPLES[0]!);
                     document.getElementById("watch-prompt")?.focus();
                   }}
                 >

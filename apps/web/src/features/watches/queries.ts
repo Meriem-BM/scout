@@ -23,5 +23,11 @@ export function useWorkflowQuery(id: string, enabled = true) {
     queryFn: () => api(`/api/watches/${id}/workflow`, WatchWorkflowSchema),
     enabled,
     staleTime: 5000,
+    refetchInterval: (query) =>
+      ["LIVE", "FAILED", "NEEDS_CLARIFICATION"].includes(
+        query.state.data?.state ?? "",
+      )
+        ? 30_000
+        : false,
   });
 }

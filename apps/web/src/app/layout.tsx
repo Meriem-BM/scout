@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: "%s · Scout",
   },
   description:
-    "Tell Scout what matters. It plans, verifies, and runs the onchain data pipeline. Uniswap is its deepest first-class protocol integration.",
+    "Describe what matters onchain. Scout checks the data and monitoring tools it has, builds your Watch, and verifies it before activation.",
   robots: { index: false, follow: false },
 };
 

@@ -1,101 +1,148 @@
 import Link from "next/link";
 
-import { Flow, GraphArchitecture } from "./flow";
+import { CapabilityCatalog } from "../capabilities/catalog";
+
+import { Flow } from "./flow";
 
 const pages = {
   overview: {
     title: "Scout in 60 seconds",
     intro:
-      "Describe a monitoring question. Scout resolves the data and infrastructure, verifies the executable pipeline, and follows the chain for you.",
+      "Describe what matters onchain. Scout checks whether it can monitor it, and tells you if anything is missing.",
     sections: [
       [
-        "Start with intent",
-        "For example: Watch Uniswap V3 ETH/USDC buys above $100K from wallets that haven’t traded on Uniswap before. Scout resolves the network, pair, direction, threshold, and historical investigation requirement. It asks for clarification only when a missing answer changes the result.",
+        "1. Describe what you want watched",
+        "Write the activity and conditions you care about in your own words.",
       ],
       [
-        "More than an alert dashboard",
-        "Scout plans the infrastructure behind the signal: it discovers Substreams packages, selects an architecture, and tests the resulting pipeline against independently retrieved chain history. Compilation alone never authorizes activation.",
+        "2. Scout understands the request",
+        "Scout separates the activity, chain, tokens, wallets and conditions. Understanding a request does not mean it can run yet.",
       ],
       [
-        "After detection",
-        "Deterministic rules filter the stream first. Qualifying events receive historical Graph context and an evidence-based investigation. Alert delivery is separate from monitoring, with explicit email consent and Telegram pairing.",
+        "3. Scout checks what it needs",
+        "It checks which blockchain data and monitoring tools are needed, using its current capability registry.",
+      ],
+      [
+        "4. If information is missing, Scout asks",
+        "A useful question helps confirm your intended scope. Scout keeps your requested conditions intact.",
+      ],
+      [
+        "5. If a capability is unavailable, Scout tells you",
+        "You can see what is available and exactly which part is missing. The Watch stays inactive.",
+      ],
+      [
+        "6. Scout builds and verifies the Watch",
+        "When the required capabilities are available, Scout prepares the data and tests the monitoring rules. A plan alone cannot activate a Watch.",
+      ],
+      [
+        "7. Once ready, Scout monitors live activity",
+        "Scout follows finalized chain activity and records matches. Your configured delivery settings determine where alerts are sent.",
+      ],
+    ],
+  },
+  capabilities: {
+    title: "What is a capability?",
+    intro: "A capability is something Scout knows how to observe or evaluate.",
+    sections: [
+      [
+        "Data capabilities",
+        "These provide blockchain activity, such as reading a protocol’s swaps. Support can differ between protocol versions and chains.",
+      ],
+      [
+        "Monitoring capabilities",
+        "These evaluate conditions, such as counting unique wallets in 10 minutes. A monitoring tool also needs compatible data and verification of the full Watch.",
+      ],
+      [
+        "Historical capabilities",
+        "These check earlier blockchain activity, such as whether a wallet used a protocol before. Unknown history is never treated as proof that no activity happened.",
+      ],
+      [
+        "What the labels mean",
+        "Ready means tested against real chain data. Available means the data or tool is installed but each Watch still needs verification. Limited means only part of the capability works. Not available yet means Scout cannot currently provide it.",
+      ],
+      [
+        "Different versions, different activity",
+        "Uniswap currently has Scout’s deepest protocol support. V3 and V4 appear separately because they expose different activity. Use the live list below to see the exact scope and limitations. ERC-20 transfer support is also listed by chain and token.",
       ],
     ],
   },
   works: {
-    title: "From intent to verified infrastructure",
+    title: "From your request to a live Watch",
     intro:
-      "Scout first checks whether someone has already built the data pipeline it needs.",
+      "Scout finds the data and checks the conditions behind your request before it starts monitoring.",
     sections: [
       [
-        "Understand and clarify",
-        "Natural language becomes a structured Watch intent with explicit fields, visible assumptions, and blocking questions. Your answer resumes the same persisted workflow.",
+        "Understand your request",
+        "Scout identifies what you want to watch. If the token, chain or scope is unclear, it asks for the detail it needs.",
       ],
       [
-        "Plan the data",
-        "DataRequirementSpec separates streaming facts, deterministic rules, historical queries, investigation, and delivery. PipelinePlan records selected packages, modules, strategy, and verification requirements.",
+        "Check data and monitoring tools",
+        "Scout checks every condition against its installed capabilities. If something is missing, it explains that part before attempting to build.",
       ],
       [
-        "Reuse before generating",
-        "REUSE consumes an existing output. PARAMETERIZE configures an existing module. COMPOSE connects reusable infrastructure with a small normalization module. GENERATE builds missing infrastructure when reuse cannot satisfy the request; general generation is not yet implemented in Scout.",
+        "Find and reuse blockchain data",
+        "Scout looks for existing data pipelines it can reuse. Finding a package is only a starting point; its data must satisfy the request.",
       ],
       [
-        "Prove it before activation",
-        "The implemented executor compiles a trusted module, runs it on historical Ethereum blocks, and compares output with independent Subgraph data. The durable consumer then catches up. Live activation requires actual finalized output within the configured head-lag tolerance.",
+        "Verify the data and create the rules",
+        "Scout checks real blockchain output and tests whether the Watch preserves your conditions. Failed or incomplete verification blocks activation.",
+      ],
+      [
+        "Monitor and explain matches",
+        "Once the stream is healthy and the Watch is verified, Scout monitors live activity. Matches retain their evidence, historical context and delivery status.",
       ],
     ],
   },
   substreams: {
-    title: "Why Scout uses Substreams",
+    title: "What does Substreams do for Scout?",
     intro:
-      "A monitor needs trustworthy history as well as the next block. Substreams connects those two needs.",
+      "Substreams gives Scout fast access to structured blockchain activity. Scout can reuse existing Substreams packages instead of writing a new indexer for every Watch.",
     sections: [
       [
-        "Parallel history",
-        "Substreams can distribute historical work across block ranges instead of processing the entire chain one block at a time. Execution depends on the package, dependencies, cache, and provider. Scout does not claim a speedup or number of parallel jobs without measurements.",
+        "Historical processing",
+        "Substreams can process historical block ranges in parallel. Scout uses earlier activity to test the data before activation. Testing a range does not prove complete wallet history.",
       ],
       [
-        "Reuse blockchain knowledge",
-        "The Substreams registry contains compiled packages with inspectable modules and output types. Scout searches and inspects them before choosing an architecture. Finding a familiar package name is not proof that its output satisfies your intent.",
+        "Live streaming",
+        "The same data pipeline can continue toward new finalized blocks. Scout saves its position so monitoring can recover after an interruption.",
       ],
       [
-        "History into live data",
-        "Scout tests an executable pipeline against a bounded historical range, then consumes finalized blocks using a persisted cursor. Catch-up status reports actual pipeline and network heads. The current implementation does not claim a complete pre-activation wallet-history baseline.",
+        "Reusable packages",
+        "A package describes reusable blockchain data processing. Scout checks whether its output provides the activity and fields your Watch needs.",
       ],
       [
-        "Context is a separate job",
-        "After deterministic rules identify a candidate, Subgraph queries retrieve relevant history for investigation. Partial or failed context stays visible; it is never relabeled as complete just because the stream is live.",
+        "Why Scout verifies it",
+        "A package name cannot prove that its data is correct for your request. Scout checks output against independent evidence and keeps a Watch inactive if verification fails.",
       ],
       [
-        "Inspect and reuse your package",
-        "Open a Watch’s technical proof to view its selected registry dependency and download its private package, manifest, and sources. Registry publication is separate from deployment. Scout does not currently publish packages on your behalf.",
+        "Scout supplies the monitoring logic",
+        "Substreams supplies activity. Scout applies your conditions, checks relevant history, records findings and delivers alerts.",
       ],
     ],
   },
   architecture: {
     title: "How Scout fits together",
-    intro:
-      "One durable workflow connects your intent to verified infrastructure and evidence-backed investigations.",
+    intro: "Protocols provide data. Scout provides the monitoring language.",
     sections: [
       [
-        "Intent planner",
-        "Converts your request into structured monitoring requirements and asks useful clarification questions. The model resolves intent; it does not decide whether a build or verification succeeded.",
+        "Your request",
+        "You describe the activity and conditions. Scout identifies the data and tools needed and asks about missing details.",
       ],
       [
-        "Package resolver and pipeline planner",
-        "Search the real Substreams registry, inspect output types and dependencies, and persist the proposed architecture. Runtime compatibility and independent verification remain separate gates.",
+        "Data sources",
+        "Adapters turn protocol-specific activity into a consistent form Scout can evaluate. The capability registry records what each source provides and its limitations.",
       ],
       [
-        "Build and verification",
-        "The current trusted Uniswap executor compiles a real package and compares historical output with reference events. A generic untrusted-code sandbox and broader executors remain implementation work.",
+        "Monitoring rules",
+        "Scout combines reusable conditions over that activity. It checks compatibility and verifies the whole Watch before activation.",
       ],
       [
-        "Durable stream and runtime",
-        "The worker consumes finalized blockchain data independently of browser sessions. Cursors and canonical event identities protect recovery and duplicate processing; rules reduce the events sent for investigation.",
+        "A live Watch",
+        "The worker follows finalized activity, checks the rules, investigates matches and delivers alerts according to your settings.",
       ],
       [
-        "Investigation and delivery",
-        "The Graph supplies historical context. Scout records facts, interpretation, and limits, then queues an alert or suppresses it. Telegram and email delivery have their own states and consent requirements.",
+        "Adding protocols",
+        "A new protocol adapter supplies data to the same monitoring engine. It does not require a separate Watch system. New sources must establish their capabilities before they are offered as supported.",
       ],
     ],
   },
@@ -109,6 +156,7 @@ export function DocsPage({ page }: { page: keyof typeof pages }) {
       <nav aria-label="Documentation">
         {[
           ["/docs", "Scout in 60 seconds", "overview"],
+          ["/docs/capabilities", "Capabilities", "capabilities"],
           ["/docs/how-it-works", "How it works", "works"],
           ["/docs/substreams", "Why Substreams", "substreams"],
           ["/docs/architecture", "Architecture", "architecture"],
@@ -126,56 +174,64 @@ export function DocsPage({ page }: { page: keyof typeof pages }) {
         <span className="eyebrow">Scout documentation</span>
         <h1>{content.title}</h1>
         <p className="docs-lead">{content.intro}</p>
-        <Flow
-          label="Monitoring architecture"
-          steps={
-            page === "architecture"
-              ? [
-                  "User intent",
-                  "Intent planner",
-                  "Package resolver → Registry",
-                  "Pipeline planner",
-                  "Verification",
-                  "Substreams history + live",
-                  "Scout rules",
-                  "Graph context + investigation",
-                  "Alert / suppress",
-                ]
-              : [
-                  "Intent",
-                  "Plan",
-                  "Resolve data",
-                  "Build or reuse",
-                  "Verify",
-                  "Deploy",
-                  "Monitor",
-                ]
-          }
-        />
+        {page !== "overview" && page !== "capabilities" && (
+          <Flow
+            label="How Scout works"
+            steps={[
+              "Your request",
+              "Scout understands it",
+              "Data source",
+              "Monitoring rules",
+              "Verified live Watch",
+            ]}
+          />
+        )}
         {content.sections.map(([title, body]) => (
           <section key={title}>
             <h2>{title}</h2>
             <p>{body}</p>
           </section>
         ))}
-        {page === "architecture" && <GraphArchitecture />}
-        <aside className="docs-scope">
-          <strong>Current execution scope</strong>
+        <section>
+          <h2>What Scout can monitor now</h2>
+          <CapabilityCatalog compact={page !== "capabilities"} />
+        </section>
+        <details className="docs-advanced">
+          <summary>Technical details</summary>
           <p>
-            Ethereum Uniswap V3 WETH/USDC is the verified live path. Other
-            protocol intents can be planned but may stop before activation.
-            Scout never labels an unsupported executor as live.
+            Internally, Scout represents the request as a typed WatchProgram and
+            validates every required capability before activation. The
+            Capability Planner separates data acquisition from the generic
+            runtime. Availability is not proof of whole-program acceptance or
+            live stream health.
           </p>
-        </aside>
-        <p>
-          <a
-            href="https://thegraph.com/docs/en/substreams/public-substreams/substreams-dev/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            The Graph: packages and historical/live data ↗
-          </a>
-        </p>
+          <Flow
+            label="Advanced architecture"
+            steps={[
+              "Intent Resolver",
+              "WatchProgram",
+              "Capability Planner",
+              "Data Adapter / Substreams",
+              "Normalized Events",
+              "Generic Runtime",
+              "Investigation",
+              "Decision",
+              "Delivery",
+            ]}
+          />
+          <p>
+            Watch details retain the capability plan, selected packages,
+            modules, pipeline strategy, verification and historical evidence.
+            General arbitrary pipeline generation is not currently implemented.
+          </p>
+          {page === "substreams" && (
+            <p>
+              Packages may include protobuf output types and compiled WASM
+              modules. Scout inspects those artifacts and verifies field
+              semantics before trusting their output.
+            </p>
+          )}
+        </details>
         <Link href="/watches">Build a Watch →</Link>
       </article>
     </div>

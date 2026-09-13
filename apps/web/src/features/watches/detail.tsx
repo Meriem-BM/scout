@@ -25,6 +25,7 @@ import {
 import { queryKeys } from "@/lib/query/keys";
 
 import { SignInButton } from "../account/sign-in-button";
+import { WatchCapabilityExplanation } from "../capabilities/watch-explanation";
 import { Flow } from "../communication/flow";
 import { ConnectionPopover } from "../connections/connections";
 import { Investigation } from "../incidents/incident";
@@ -171,6 +172,7 @@ export function WatchDetail({
           </div>
         </div>
       </header>
+      {workflow.data && <WatchCapabilityExplanation workflow={workflow.data} />}
       <div className="watch-overview-grid">
         <section
           className="watch-definition"

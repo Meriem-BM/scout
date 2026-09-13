@@ -1,4 +1,4 @@
-import { SketchArrow } from "@/components/ui/sketch-arrow";
+import { FlowArrow } from "@/components/ui/flow-arrow";
 
 export function Flow({ steps, label }: { steps: string[]; label: string }) {
   return (
@@ -8,7 +8,7 @@ export function Flow({ steps, label }: { steps: string[]; label: string }) {
           <span>{step}</span>
           {index < steps.length - 1 && (
             <i aria-hidden="true">
-              <SketchArrow />
+              <FlowArrow />
             </i>
           )}
         </li>
@@ -32,9 +32,9 @@ export function GraphArchitecture() {
       </div>
       <p className="graph-explanation-result">
         <span>Scout rules</span>
-        <SketchArrow />
+        <FlowArrow />
         <span>investigation</span>
-        <SketchArrow />
+        <FlowArrow />
         <span>alert or suppress</span>
       </p>
     </div>

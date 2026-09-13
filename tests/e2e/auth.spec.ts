@@ -30,11 +30,9 @@ test("extension attributes on the root element do not report a hydration mismatc
     page.getByRole("heading", { name: "Describe what matters onchain." }),
   ).toBeVisible();
   await page.waitForFunction(() => document.readyState === "complete");
-  await page
-    .getByRole("button", { name: "View monitoring capabilities" })
-    .click();
+  await page.getByRole("link", { name: "What can Scout watch? →" }).click();
   await expect(
-    page.getByRole("heading", { name: "How Scout plans a monitor" }),
+    page.getByRole("heading", { name: "Start with what’s available." }),
   ).toBeVisible();
 
   expect(hydrationErrors).toEqual([]);
@@ -48,19 +46,17 @@ test("anonymous draft stays in context while sign-in opens from the watch flow",
   await expect(
     page.getByRole("heading", { name: "Describe what matters onchain." }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "View monitoring capabilities" })
-    .click();
+  await page.getByRole("link", { name: "What can Scout watch? →" }).click();
   await expect(
-    page.getByRole("heading", { name: "How Scout plans a monitor" }),
+    page.getByRole("heading", { name: "Start with what’s available." }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Uniswap V3 · Ethereum", exact: true }),
+    page.getByRole("heading", { name: "Uniswap V3 swaps", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "USDC transfers · Base", exact: true }),
+    page.getByRole("heading", { name: "Native USDC transfers", exact: true }),
   ).toBeVisible();
-  await page.keyboard.press("Escape");
+  await page.getByRole("link", { name: "← Your Watches" }).click();
 
   const draft =
     "Watch wallet 0x1111111111111111111111111111111111111111 for transfers above $250K.";
