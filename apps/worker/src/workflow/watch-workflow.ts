@@ -9,6 +9,7 @@ import {
   DataRequirementSpecSchema,
   type ExecutableWatchSpec,
   ExecutableWatchSpecSchema,
+  isCapabilityUnavailable,
   migrateExecutableProgram,
   PackageResolutionSchema,
   PipelinePlanSchema,
@@ -16,14 +17,14 @@ import {
   planProgramCapabilities,
   requireValidatedProgram,
   resolvePipelinePackages,
+  unavailableIntentCapability,
   VerificationReportSchema,
   WatchIntentSpecSchema,
-  type WorkflowErrorCategory,
   workflowErrorCategory,
+  type WorkflowErrorCategory,
   type WorkflowStage,
   WorkflowStageSchema,
 } from "@scout/domain";
-import { GroqAdapter } from "@scout/integrations/ai";
 import { IntegrationError } from "@scout/integrations/http";
 import { SubstreamsRegistry } from "@scout/integrations/substreams-registry";
 
@@ -34,6 +35,8 @@ import {
 } from "../errors";
 import { log } from "../log";
 import { buildDeployment } from "../pipeline/build";
+
+import { resolveWorkflowIntent } from "./resolve-intent";
 
 import type { WorkerConfig } from "../config";
 import type { DatabaseConnection } from "@scout/database";
@@ -95,7 +98,7 @@ export async function failWorkflow(
   await sql.begin(async (tx) => {
     await tx`update public.watch_workflows set error_category=${category},error_code=${code},error_message=${safeMessage},recoverable=${recoverable},updated_at=now() where id=${workflowId}`;
     await tx`update public.watches w set error=${safeMessage} from public.watch_workflows f where f.id=${workflowId} and w.id=f.watch_id`;
-    await tx`select app_private.append_workflow_event(${workflowId},'FAILED','workflow.failed','failed',${category === "VERIFICATION" ? "Pipeline could not be verified" : "Workflow stopped"},${safeMessage},${tx.json({ category, code, recoverable })})`;
+    await tx`select app_private.append_workflow_event(${workflowId},'FAILED','workflow.failed',${isCapabilityUnavailable(code) ? "warning" : "failed"},${isCapabilityUnavailable(code) ? "Request not supported yet" : category === "VERIFICATION" ? "Pipeline could not be verified" : "Setup stopped"},${safeMessage},${tx.json({ category, code, recoverable })})`;
   });
 }
 
@@ -123,13 +126,6 @@ export async function runWatchWorkflow(
     let intentValue = await output(sql, row.id, "intent");
 
     if (!intentValue) {
-      if (!config.GROQ_API_KEY) {
-        throw new IntegrationError(
-          "GROQ_SETUP_REQUIRED",
-          "Intent resolution requires GROQ_API_KEY on the monitoring worker.",
-        );
-      }
-
       if (row.state !== "INTENT_RESOLVING") {
         await append(
           sql,
@@ -148,10 +144,29 @@ export async function runWatchWorkflow(
         field: z.string().parse(answer.field),
         answer: z.string().parse(answer.answer),
       }));
-      const resolved = await new GroqAdapter(
-        config.GROQ_API_KEY,
-        config.GROQ_MODEL,
-      ).resolveIntent(row.original_prompt, answers);
+      const resolved = await resolveWorkflowIntent(
+        row.original_prompt,
+        answers,
+        config,
+      );
+
+      // Missing capabilities cannot be fixed by another clarification.
+      // Keep the interpreted request and threshold intact for review.
+      const unavailable = unavailableIntentCapability(resolved.intent);
+
+      if (unavailable) {
+        await put(sql, row.id, "intent", resolved.intent);
+        await failWorkflow(
+          sql,
+          row.id,
+          "INTENT",
+          unavailable.code,
+          unavailable.message,
+          false,
+        );
+
+        return;
+      }
 
       if (resolved.status === "UNSUPPORTED") {
         const alternative = resolved.supportedAlternative
@@ -195,6 +210,21 @@ export async function runWatchWorkflow(
     }
 
     const intent = WatchIntentSpecSchema.parse(intentValue);
+
+    const unavailable = unavailableIntentCapability(intent);
+
+    if (unavailable) {
+      await failWorkflow(
+        sql,
+        row.id,
+        "INTENT",
+        unavailable.code,
+        unavailable.message,
+        false,
+      );
+
+      return;
+    }
 
     let requirementsValue = await output(sql, row.id, "data_requirements");
     const dataQuestion = dataPlanningClarification(intent);
@@ -255,7 +285,36 @@ export async function runWatchWorkflow(
       });
     }
 
+    if (programError) {
+      await failWorkflow(
+        sql,
+        row.id,
+        "PLAN",
+        "EXECUTABLE_SPEC_INVALID",
+        programError,
+        false,
+      );
+
+      return;
+    }
+
     const currentRequirements = planDataRequirements(intent);
+
+    if (currentRequirements.execution.status !== "verified") {
+      await put(sql, row.id, "data_requirements", currentRequirements);
+      await failWorkflow(
+        sql,
+        row.id,
+        "PLAN",
+        "VERIFIED_EXECUTOR_UNAVAILABLE",
+        currentRequirements.execution.reason ??
+          "Scout does not yet support this monitoring setup.",
+        false,
+      );
+
+      return;
+    }
+
     const savedRequirements =
       DataRequirementSpecSchema.safeParse(requirementsValue);
     const refreshRequirements =
@@ -286,7 +345,7 @@ export async function runWatchWorkflow(
         refreshRequirements
           ? "Blockchain data plan refreshed"
           : "Blockchain data plan ready",
-        `${currentRequirements.protocolName} ${currentRequirements.requiredStreams[0]?.entity ?? "activity"} evidence comes from Substreams; rules, context, investigation, and delivery remain in Scout.`,
+        `Scout identified the fields needed for ${currentRequirements.protocolName} ${currentRequirements.requiredStreams[0]?.entity ?? "activity"}. The source and execution still need verification.`,
         {
           streamFields: currentRequirements.requiredStreams.flatMap(
             (stream) => stream.fields,

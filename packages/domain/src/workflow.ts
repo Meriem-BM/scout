@@ -524,5 +524,5 @@ export const workflowLabel = (stage: WorkflowStage) =>
     DEPLOYMENT_VERIFYING: "Verifying live connection",
     CATCHING_UP: "Catching up",
     LIVE: "Live",
-    FAILED: "Needs attention",
+    FAILED: "Setup stopped",
   })[stage];

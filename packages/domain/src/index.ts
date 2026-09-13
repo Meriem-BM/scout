@@ -1,5 +1,9 @@
 export * from "./limits";
 
+export * from "./watch-starters";
+
+export * from "./watch-support";
+
 export * from "./uniswap-scope";
 
 export * from "./money";

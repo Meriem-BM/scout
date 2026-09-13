@@ -130,13 +130,6 @@ export type Condition = z.infer<typeof ConditionSchema>;
 export const DEFAULT_PROMPT =
   "Track Uniswap V3 ETH/USDC buys above $100K from wallets that haven't traded on Uniswap before.";
 
-export const EXAMPLES = [
-  "Watch Uniswap V3 ETH/USDC buys above $250K on Ethereum.",
-  "Flag liquidity removals above $500K from a Uniswap pool.",
-  "Follow this wallet and flag transfers above $250K: 0x0000000000000000000000000000000000000000.",
-  "Flag sudden token volume spikes on Ethereum compared with the previous hour.",
-];
-
 export const defaultSpec = (): WatchSpec => ({
   schemaVersion: 1,
   streamDirection: "selected",
