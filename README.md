@@ -10,12 +10,6 @@ The aim is to make monitoring useful without requiring users to know contract ad
 
 [Capabilities](#supported-capabilities) · [Architecture](#architecture) · [Local setup](#local-development) · [Tests](#validation)
 
-## History provenance
-
-The commits on this branch are an **editorial reconstruction of the September 13, 2026 source snapshot**. Their author dates were assigned across September 7–13 for review organization; they are **not evidence that the committed code existed on those dates**. Committer dates record when these commits were actually created. Commit messages repeat this disclosure. The 56 component groups assign eight commits to each day. They assemble one current source tree; intermediate commits are not recovered releases and may not build independently.
-
-The inspected checkout had no commits, refs, reflog, stashes, tags, remote, or recoverable Git objects. Partial editor snapshots from September 7 and 12, and local build/provider records, do not establish complete historical repository states. No historical engineering milestone was reconstructed from those fragments. The `backup/pre-reconstruction-20260913` branch preserves the public source before this organization. Recorded integration evidence retains its own dates and limitations independently of Git author dates.
-
 ## Supported capabilities
 
 | Request or capability                                                                                   | Status                                                                                                                 |
