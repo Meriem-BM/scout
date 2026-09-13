@@ -5,6 +5,7 @@ import {
   evaluate,
   investigationDecision,
   PriorActivitySchema,
+  verifyUniswapAcceptance,
 } from "@scout/domain";
 
 import { fixtureEvents } from "../fixtures/swap-events";
@@ -39,6 +40,22 @@ function prior(status: "FOUND" | "NONE_WITH_PROVEN_COVERAGE" | "UNKNOWN") {
 }
 
 describe("fresh trader semantics", () => {
+  it.each([true, false])(
+    "verifies controlled acceptance with history required=%s",
+    (requireNoPriorUniswapSwaps) => {
+      const request = {
+        ...spec,
+        investigation: { requireNoPriorUniswapSwaps },
+      };
+      const report = verifyUniswapAcceptance(
+        request,
+        fixtureEvents(request)[0]!,
+      );
+
+      expect(report.status).toBe("INTENT_ACCEPTANCE_VERIFIED");
+      expect(report.cases.every((item) => item.passed)).toBe(true);
+    },
+  );
   it("retains the actor on a qualifying large swap", () => {
     const event = fixtureEvents(spec)[0]!;
 

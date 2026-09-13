@@ -53,7 +53,20 @@ export function verifyUniswapAcceptance(spec: WatchSpec, seed: SwapEvent) {
     throughBlock: seed.blockNumber,
     blockHash: seed.blockHash,
     deployment: null,
-    evidenceTransaction: null,
+    evidenceTransaction:
+      status === "FOUND"
+        ? seed.transactionHash.slice(0, -1) +
+          (seed.transactionHash.endsWith("0") ? "1" : "0")
+        : null,
+    coverage:
+      status === "NONE_WITH_PROVEN_COVERAGE"
+        ? {
+            fromBlock: "0",
+            throughBlock: seed.blockNumber,
+            blockHash: seed.blockHash,
+            complete: true,
+          }
+        : undefined,
     reason: "Controlled acceptance input, not a historical claim",
   });
   const program = migrateExecutableProgram(spec)!;
